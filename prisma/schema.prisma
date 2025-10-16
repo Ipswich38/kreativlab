@@ -1,0 +1,207 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  agents            Agent[]
+  agentInstances    AgentInstance[]
+  permissions       UserPermission[]
+  auditLogs         SecurityAuditLog[]
+  agentReviews      AgentReview[]
+
+  @@map("users")
+}
+
+model Agent {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  version     String
+  author      String
+  license     String   @default("MIT")
+  homepage    String?
+  repository  String?
+  category    String
+  tags        String[]
+  runtime     String   @default("isolated-vm")
+  memoryLimit Int      @default(128)
+  timeoutLimit Int     @default(30000)
+  code        String   @db.Text
+  manifest    Json
+  checksum    String
+  verified    Boolean  @default(false)
+  publishedAt DateTime @default(now())
+  downloadCount Int    @default(0)
+  rating      Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  authorUser     User @relation(fields: [author], references: [id])
+  capabilities   AgentCapability[]
+  instances      AgentInstance[]
+  reviews        AgentReview[]
+  rateLimits     AgentRateLimit?
+
+  @@map("agents")
+}
+
+model AgentCapability {
+  id          String @id @default(cuid())
+  agentId     String
+  name        String
+  description String
+  inputSchema Json
+  outputSchema Json
+  category    String
+  tags        String[]
+
+  // Relations
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@map("agent_capabilities")
+}
+
+model AgentRateLimit {
+  id                 String @id @default(cuid())
+  agentId            String @unique
+  requestsPerSecond  Int    @default(10)
+  requestsPerMinute  Int    @default(100)
+  requestsPerHour    Int    @default(1000)
+
+  // Relations
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@map("agent_rate_limits")
+}
+
+model AgentInstance {
+  id          String      @id @default(cuid())
+  agentId     String
+  userId      String
+  status      String      @default("idle")
+  config      Json        @default("{}")
+  environment Json        @default("{}")
+  memoryUsed  Float       @default(0)
+  cpuUsed     Float       @default(0)
+  networkUsed Float       @default(0)
+  createdAt   DateTime    @default(now())
+  lastActiveAt DateTime   @default(now())
+  terminatedAt DateTime?
+
+  // Relations
+  agent      Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  executions AgentExecution[]
+
+  @@map("agent_instances")
+}
+
+model AgentExecution {
+  id           String   @id @default(cuid())
+  instanceId   String
+  requestId    String   @unique
+  capability   String
+  input        Json
+  output       Json?
+  success      Boolean
+  error        Json?
+  executionTime Int
+  memoryUsed   Float
+  cpuTime      Float
+  logs         Json     @default("[]")
+  startTime    DateTime @default(now())
+  endTime      DateTime?
+
+  // Relations
+  instance AgentInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@map("agent_executions")
+}
+
+model AgentReview {
+  id        String   @id @default(cuid())
+  agentId   String
+  userId    String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+
+  // Relations
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, userId])
+  @@map("agent_reviews")
+}
+
+model UserPermission {
+  id          String   @id @default(cuid())
+  userId      String
+  permissions String[]
+  maxAgents   Int      @default(10)
+  maxMemoryPerAgent Int @default(128)
+  maxConcurrentExecutions Int @default(5)
+  maxExecutionTime Int @default(30000)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+  @@map("user_permissions")
+}
+
+model SecurityAuditLog {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  userId    String?
+  agentId   String?
+  action    String
+  resource  String
+  outcome   String
+  riskLevel String
+  details   Json
+  ip        String?
+  userAgent String?
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("security_audit_logs")
+}
+
+model ThreatDetection {
+  id          String   @id @default(cuid())
+  timestamp   DateTime @default(now())
+  type        String
+  severity    String
+  source      String
+  target      String?
+  description String
+  metadata    Json
+  resolved    Boolean  @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String?
+
+  @@map("threat_detections")
+}

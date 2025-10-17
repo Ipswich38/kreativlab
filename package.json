@@ -38,6 +38,7 @@
     "vercel:deploy": "vercel --prod"
   },
   "dependencies": {
+    "@eslint/eslintrc": "^3",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.75.0",
     "@tailwindcss/postcss": "^4",
@@ -50,19 +51,18 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.5",
     "lucide-react": "^0.468.0",
     "next": "15.5.5",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "superjson": "^2.2.2",
     "tailwindcss": "^4",
     "typescript": "^5",
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "eslint": "^9",
-    "eslint-config-next": "15.5.5",
-    "superjson": "^2.2.2",
     "tsx": "^4.20.6"
   }
 }

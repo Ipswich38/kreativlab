@@ -20,7 +20,10 @@ import {
   Plus,
   Edit,
   Trash2,
-  Download
+  Download,
+  Send,
+  CheckSquare,
+  Square
 } from 'lucide-react'
 
 interface DashboardStats {
@@ -261,6 +264,14 @@ export default function DashboardLayout() {
   const [contacts, setContacts] = useState<EmailContact[]>(realContacts)
   const [showAddContact, setShowAddContact] = useState(false)
   const [editingContact, setEditingContact] = useState<EmailContact | null>(null)
+  const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set())
+  const [showEmailComposer, setShowEmailComposer] = useState(false)
+  const [emailContent, setEmailContent] = useState({
+    subject: '',
+    message: '',
+    senderName: 'Happy Teeth Support Services'
+  })
+  const [sendingEmail, setSendingEmail] = useState(false)
   const [newContact, setNewContact] = useState({
     firstName: '',
     lastName: '',
@@ -360,6 +371,81 @@ export default function DashboardLayout() {
       status: 'active'
     })
     setShowAddContact(false)
+  }
+
+  // Email Selection Functions
+  const handleSelectContact = (contactId: string) => {
+    const newSelected = new Set(selectedContacts)
+    if (newSelected.has(contactId)) {
+      newSelected.delete(contactId)
+    } else {
+      newSelected.add(contactId)
+    }
+    setSelectedContacts(newSelected)
+  }
+
+  const handleSelectAll = () => {
+    const activeContactsWithEmail = contacts.filter(c => c.status === 'active' && c.email)
+    if (selectedContacts.size === activeContactsWithEmail.length) {
+      setSelectedContacts(new Set())
+    } else {
+      setSelectedContacts(new Set(activeContactsWithEmail.map(c => c.id)))
+    }
+  }
+
+  const getSelectedContactsData = () => {
+    return contacts.filter(c => selectedContacts.has(c.id))
+  }
+
+  // Email Blast Functions
+  const handleOpenEmailComposer = () => {
+    if (selectedContacts.size === 0) {
+      alert('Please select at least one contact to send emails.')
+      return
+    }
+    setShowEmailComposer(true)
+  }
+
+  const handleSendEmailBlast = async () => {
+    if (!emailContent.subject || !emailContent.message) {
+      alert('Please fill in both subject and message.')
+      return
+    }
+
+    setSendingEmail(true)
+    try {
+      const selectedContactsData = getSelectedContactsData()
+
+      const response = await fetch('/api/send-email-blast', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contacts: selectedContactsData,
+          subject: emailContent.subject,
+          message: emailContent.message,
+          senderName: emailContent.senderName
+        }),
+      })
+
+      if (response.ok) {
+        alert(`Email sent successfully to ${selectedContactsData.length} contacts!`)
+        setShowEmailComposer(false)
+        setEmailContent({
+          subject: '',
+          message: '',
+          senderName: 'Happy Teeth Support Services'
+        })
+        setSelectedContacts(new Set())
+      } else {
+        const error = await response.text()
+        alert(`Failed to send emails: ${error}`)
+      }
+    } catch (error) {
+      alert(`Error sending emails: ${error}`)
+    }
+    setSendingEmail(false)
   }
 
   // Calculate email marketing statistics based on current contacts
@@ -610,9 +696,25 @@ export default function DashboardLayout() {
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Email Contacts</h3>
-                  <p className="text-sm text-gray-600">Manage your email marketing contacts and lists</p>
+                  <p className="text-sm text-gray-600">
+                    Manage your email marketing contacts and lists
+                    {selectedContacts.size > 0 && (
+                      <span className="ml-2 text-blue-600 font-medium">
+                        ({selectedContacts.size} selected)
+                      </span>
+                    )}
+                  </p>
                 </div>
                 <div className="flex space-x-3">
+                  {selectedContacts.size > 0 && (
+                    <button
+                      onClick={handleOpenEmailComposer}
+                      className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    >
+                      <Send size={20} className="mr-2" />
+                      Email Blast ({selectedContacts.size})
+                    </button>
+                  )}
                   <label className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer">
                     <Upload size={20} className="mr-2" />
                     Upload CSV
@@ -634,6 +736,19 @@ export default function DashboardLayout() {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <button
+                            onClick={handleSelectAll}
+                            className="flex items-center space-x-2 hover:text-gray-700"
+                          >
+                            {selectedContacts.size === contacts.filter(c => c.status === 'active' && c.email).length && contacts.filter(c => c.status === 'active' && c.email).length > 0 ? (
+                              <CheckSquare size={16} />
+                            ) : (
+                              <Square size={16} />
+                            )}
+                            <span>Select</span>
+                          </button>
+                        </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Contact
                         </th>
@@ -657,6 +772,22 @@ export default function DashboardLayout() {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {contacts.map((contact) => (
                         <tr key={contact.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {contact.status === 'active' && contact.email ? (
+                              <button
+                                onClick={() => handleSelectContact(contact.id)}
+                                className="text-gray-500 hover:text-blue-600"
+                              >
+                                {selectedContacts.has(contact.id) ? (
+                                  <CheckSquare size={16} className="text-blue-600" />
+                                ) : (
+                                  <Square size={16} />
+                                )}
+                              </button>
+                            ) : (
+                              <div className="w-4 h-4"></div>
+                            )}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div>
                               <div className="text-sm font-medium text-gray-900">
@@ -744,6 +875,95 @@ export default function DashboardLayout() {
           )}
         </div>
       </div>
+
+      {/* Email Composition Modal */}
+      {showEmailComposer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Email Blast to {selectedContacts.size} Contacts
+              </h3>
+              <p className="text-sm text-gray-600 mt-2">
+                Recipients: {getSelectedContactsData().map(c => c.email).join(', ')}
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sender Name
+                </label>
+                <input
+                  type="text"
+                  value={emailContent.senderName}
+                  onChange={(e) => setEmailContent({ ...emailContent, senderName: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Your name or company name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Subject *
+                </label>
+                <input
+                  type="text"
+                  value={emailContent.subject}
+                  onChange={(e) => setEmailContent({ ...emailContent, subject: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Email subject line"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Message *
+                </label>
+                <textarea
+                  value={emailContent.message}
+                  onChange={(e) => setEmailContent({ ...emailContent, message: e.target.value })}
+                  rows={8}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Your email message..."
+                />
+              </div>
+              <div className="bg-blue-50 p-4 rounded-md">
+                <h4 className="text-sm font-medium text-blue-900 mb-2">Email Template Variables:</h4>
+                <div className="text-xs text-blue-700 space-y-1">
+                  <p><strong>&#123;&#123;firstName&#125;&#125;</strong> - Contact&apos;s first name</p>
+                  <p><strong>&#123;&#123;lastName&#125;&#125;</strong> - Contact&apos;s last name</p>
+                  <p><strong>&#123;&#123;company&#125;&#125;</strong> - Contact&apos;s company name</p>
+                  <p><strong>&#123;&#123;email&#125;&#125;</strong> - Contact&apos;s email address</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 border-t flex justify-end space-x-3">
+              <button
+                onClick={() => setShowEmailComposer(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                disabled={sendingEmail}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendEmailBlast}
+                disabled={sendingEmail || !emailContent.subject || !emailContent.message}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              >
+                {sendingEmail ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send size={16} className="mr-2" />
+                    Send Email Blast
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add/Edit Contact Modal */}
       {showAddContact && (

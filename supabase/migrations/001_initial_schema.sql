@@ -3,6 +3,7 @@
 -- Create users table
 CREATE TABLE users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+
   email VARCHAR(255) UNIQUE NOT NULL,
   name VARCHAR(255),
   role VARCHAR(20) DEFAULT 'VIEWER' CHECK (role IN ('ADMIN', 'MANAGER', 'AGENT', 'VIEWER')),

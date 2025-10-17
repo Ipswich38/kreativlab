@@ -1,3 +1,0 @@
--- This script creates a demo user with the credentials: htsscrm / 272829
--- Note: In production, use proper user management. This is for demo purposes only.
--- The user will be created via the signup flow in the app.

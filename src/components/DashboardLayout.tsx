@@ -14,7 +14,13 @@ import {
   TrendingUp,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Mail,
+  Upload,
+  Plus,
+  Edit,
+  Trash2,
+  Download
 } from 'lucide-react'
 
 interface DashboardStats {
@@ -26,6 +32,18 @@ interface DashboardStats {
   resolvedTickets: number
   urgentTickets: number
   recentCalls: number
+}
+
+interface EmailContact {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  company: string
+  phone?: string
+  tags: string[]
+  status: 'active' | 'inactive' | 'bounced'
+  createdAt: string
 }
 
 const mockStats: DashboardStats = {
@@ -54,13 +72,51 @@ const mockPractices = [
   { name: 'Bright Smiles Orthodontics', serviceLevel: 'Basic', status: 'active', lastContact: '2 days ago' },
 ]
 
+const mockContacts: EmailContact[] = [
+  {
+    id: '1',
+    firstName: 'Dr. Sarah',
+    lastName: 'Johnson',
+    email: 'sarah.johnson@smilecare.com',
+    company: 'Smile Care Dental',
+    phone: '(555) 123-4567',
+    tags: ['lead', 'dentist'],
+    status: 'active',
+    createdAt: '2024-01-15'
+  },
+  {
+    id: '2',
+    firstName: 'Michael',
+    lastName: 'Chen',
+    email: 'michael@familydental.com',
+    company: 'Family Dental Practice',
+    phone: '(555) 987-6543',
+    tags: ['prospect', 'orthodontist'],
+    status: 'active',
+    createdAt: '2024-01-14'
+  },
+  {
+    id: '3',
+    firstName: 'Emily',
+    lastName: 'Davis',
+    email: 'emily@brightsmiles.com',
+    company: 'Bright Smiles Clinic',
+    tags: ['client'],
+    status: 'active',
+    createdAt: '2024-01-13'
+  }
+]
+
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('dashboard')
+  const [contacts, setContacts] = useState<EmailContact[]>(mockContacts)
+  const [showAddContact, setShowAddContact] = useState(false)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative lg:z-0`}>
         <div className="flex items-center justify-between h-16 px-6 border-b">
           <h1 className="text-xl font-bold text-blue-600">KreativLab CRM</h1>
           <button
@@ -75,30 +131,55 @@ export default function DashboardLayout() {
           <div className="px-6 mb-4">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Main</p>
           </div>
-          <a href="#" className="flex items-center px-6 py-3 text-gray-700 bg-blue-50 border-r-4 border-blue-500">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex items-center w-full px-6 py-3 text-left ${activeTab === 'dashboard' ? 'text-gray-700 bg-blue-50 border-r-4 border-blue-500' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
             <TrendingUp size={20} className="mr-3" />
             Dashboard
-          </a>
-          <a href="#" className="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+          </button>
+          <button
+            onClick={() => setActiveTab('email-contacts')}
+            className={`flex items-center w-full px-6 py-3 text-left ${activeTab === 'email-contacts' ? 'text-gray-700 bg-blue-50 border-r-4 border-blue-500' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
+            <Mail size={20} className="mr-3" />
+            Email Contacts
+          </button>
+          <button
+            onClick={() => setActiveTab('practices')}
+            className={`flex items-center w-full px-6 py-3 text-left ${activeTab === 'practices' ? 'text-gray-700 bg-blue-50 border-r-4 border-blue-500' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
             <Building2 size={20} className="mr-3" />
             Practices
-          </a>
-          <a href="#" className="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+          </button>
+          <button
+            onClick={() => setActiveTab('call-center')}
+            className={`flex items-center w-full px-6 py-3 text-left ${activeTab === 'call-center' ? 'text-gray-700 bg-blue-50 border-r-4 border-blue-500' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
             <Phone size={20} className="mr-3" />
             Call Center
-          </a>
-          <a href="#" className="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+          </button>
+          <button
+            onClick={() => setActiveTab('tickets')}
+            className={`flex items-center w-full px-6 py-3 text-left ${activeTab === 'tickets' ? 'text-gray-700 bg-blue-50 border-r-4 border-blue-500' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
             <Ticket size={20} className="mr-3" />
             Support Tickets
-          </a>
-          <a href="#" className="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+          </button>
+          <button
+            onClick={() => setActiveTab('billing')}
+            className={`flex items-center w-full px-6 py-3 text-left ${activeTab === 'billing' ? 'text-gray-700 bg-blue-50 border-r-4 border-blue-500' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
             <DollarSign size={20} className="mr-3" />
             Billing
-          </a>
-          <a href="#" className="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+          </button>
+          <button
+            onClick={() => setActiveTab('team')}
+            className={`flex items-center w-full px-6 py-3 text-left ${activeTab === 'team' ? 'text-gray-700 bg-blue-50 border-r-4 border-blue-500' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
             <Users size={20} className="mr-3" />
             Team
-          </a>
+          </button>
         </nav>
 
         <div className="absolute bottom-0 w-full p-6 border-t">
@@ -125,7 +206,7 @@ export default function DashboardLayout() {
       </div>
 
       {/* Main Content */}
-      <div className="lg:ml-64">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Navigation */}
         <div className="bg-white shadow-sm border-b">
           <div className="flex items-center justify-between h-16 px-6">
@@ -136,7 +217,15 @@ export default function DashboardLayout() {
               >
                 <Menu size={24} />
               </button>
-              <h2 className="text-xl font-semibold text-gray-800">Dashboard</h2>
+              <h2 className="text-xl font-semibold text-gray-800">
+                {activeTab === 'dashboard' && 'Dashboard'}
+                {activeTab === 'email-contacts' && 'Email Contacts'}
+                {activeTab === 'practices' && 'Practices'}
+                {activeTab === 'call-center' && 'Call Center'}
+                {activeTab === 'tickets' && 'Support Tickets'}
+                {activeTab === 'billing' && 'Billing'}
+                {activeTab === 'team' && 'Team'}
+              </h2>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-600">
@@ -149,10 +238,12 @@ export default function DashboardLayout() {
           </div>
         </div>
 
-        {/* Dashboard Content */}
-        <div className="p-6">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {activeTab === 'dashboard' && (
+            <>
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -288,7 +379,142 @@ export default function DashboardLayout() {
                 </div>
               </div>
             </div>
-          </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'email-contacts' && (
+            <div className="space-y-6">
+              {/* Header with Actions */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Email Contacts</h3>
+                  <p className="text-sm text-gray-600">Manage your email marketing contacts and lists</p>
+                </div>
+                <div className="flex space-x-3">
+                  <label className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer">
+                    <Upload size={20} className="mr-2" />
+                    Upload CSV
+                    <input type="file" accept=".csv" className="hidden" />
+                  </label>
+                  <button
+                    onClick={() => setShowAddContact(true)}
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    <Plus size={20} className="mr-2" />
+                    Add Contact
+                  </button>
+                </div>
+              </div>
+
+              {/* Contacts Table */}
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Contact
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Company
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Tags
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Added
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {contacts.map((contact) => (
+                        <tr key={contact.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {contact.firstName} {contact.lastName}
+                              </div>
+                              <div className="text-sm text-gray-500">{contact.email}</div>
+                              {contact.phone && (
+                                <div className="text-sm text-gray-500">{contact.phone}</div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {contact.company}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex flex-wrap gap-1">
+                              {contact.tags.map((tag, index) => (
+                                <span
+                                  key={index}
+                                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                contact.status === 'active'
+                                  ? 'bg-green-100 text-green-800'
+                                  : contact.status === 'inactive'
+                                  ? 'bg-gray-100 text-gray-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
+                              {contact.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {contact.createdAt}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex justify-end space-x-2">
+                              <button className="text-blue-600 hover:text-blue-900">
+                                <Edit size={16} />
+                              </button>
+                              <button className="text-red-600 hover:text-red-900">
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {contacts.length === 0 && (
+                <div className="text-center py-12">
+                  <Mail className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No contacts</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Get started by uploading a CSV file or adding your first contact.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab !== 'dashboard' && activeTab !== 'email-contacts' && (
+            <div className="text-center py-12">
+              <div className="text-gray-400">
+                <div className="text-lg font-medium">Coming Soon</div>
+                <p className="mt-2">This section is under development.</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

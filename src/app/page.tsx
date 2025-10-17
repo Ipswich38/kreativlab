@@ -21,10 +21,10 @@ export default function HomePage() {
               Login
             </Link>
             <Link
-              href="/dashboard"
+              href="/login"
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Dashboard
+              Client Login
             </Link>
           </div>
         </nav>
@@ -41,7 +41,7 @@ export default function HomePage() {
         </p>
         <div className="space-x-4">
           <Link
-            href="/dashboard"
+            href="/login"
             className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg hover:bg-blue-700 transition-colors inline-block"
           >
             Get Started
@@ -149,7 +149,7 @@ export default function HomePage() {
           chair time and profitability with KreativLab CRM.
         </p>
         <Link
-          href="/dashboard"
+          href="/login"
           className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg hover:bg-blue-700 transition-colors inline-block"
         >
           Start Your Free Trial

@@ -240,7 +240,7 @@ const csvData = [
 const realContacts: EmailContact[] = csvData.map((row, index) => {
   const { firstName, lastName } = parseName(row.name)
   const hasEmail = row.email && row.email.length > 0
-  const status: 'active' | 'inactive' = hasEmail ? 'active' : 'inactive'
+  const status: 'active' | 'inactive' | 'bounced' = hasEmail ? 'active' : 'inactive'
 
   return {
     id: (index + 1).toString(),
@@ -268,7 +268,7 @@ export default function DashboardLayout() {
     company: '',
     phone: '',
     tags: [] as string[],
-    status: 'active' as 'active' | 'inactive'
+    status: 'active' as 'active' | 'inactive' | 'bounced'
   })
 
   // CRUD Operations
@@ -838,11 +838,12 @@ export default function DashboardLayout() {
                 </label>
                 <select
                   value={newContact.status}
-                  onChange={(e) => setNewContact({ ...newContact, status: e.target.value as 'active' | 'inactive' })}
+                  onChange={(e) => setNewContact({ ...newContact, status: e.target.value as 'active' | 'inactive' | 'bounced' })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
+                  <option value="bounced">Bounced</option>
                 </select>
               </div>
             </div>

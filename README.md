@@ -1,90 +1,80 @@
-# KreativLab - Production-Ready Micro-Agents Platform
+# KreativLab - Dental Administrative Support CRM
 
-A comprehensive, enterprise-grade micro-agents platform with full Model Context Protocol (MCP) integration, built with Next.js 15, TypeScript, and modern security practices.
+A comprehensive SaaS CRM platform designed specifically for dental administrative support services, enabling efficient management of dental practice relationships, patient communications, and revenue cycle operations.
+
+## 🦷 About
+
+KreativLab is built to power dental administrative support businesses like Happy Teeth Support Services, providing a complete solution for managing:
+- Virtual dental call center operations
+- Front-office administrative management
+- Revenue cycle management (RCM)
+- 24/7 patient support communications
 
 ## 🚀 Features
 
-### Core Platform
-- **Full MCP Integration** - Complete Model Context Protocol support for seamless agent communication
-- **Secure Execution Environment** - Sandboxed runtime using isolated-vm with comprehensive security policies
-- **Agent Registry & Marketplace** - Centralized discovery, publishing, and management of micro-agents
-- **Real-time Monitoring** - Comprehensive logging, security auditing, and performance metrics
-- **Type-Safe APIs** - tRPC-based APIs with Zod validation and TypeScript throughout
+### Practice Management
+- **Dental Practice CRM** - Manage relationships with dental practice clients
+- **Contact Management** - Track practice staff, dentists, and key contacts
+- **Service Agreements** - Manage contracts and service levels
+- **Performance Tracking** - Monitor KPIs and client satisfaction
 
-### Security & Compliance
-- **Advanced Sandboxing** - Multi-layer security with isolated-vm, network restrictions, and resource limits
-- **Security Audit Trails** - Complete logging of all actions with risk assessment and anomaly detection
-- **Threat Detection** - Real-time security monitoring with automated response capabilities
-- **Permission Management** - Granular RBAC with resource limits and quota management
+### Call Center Operations
+- **Call Logging** - Comprehensive call tracking and history
+- **Patient Support Tickets** - Manage patient inquiries and issues
+- **Communication Hub** - Multi-channel communication management
+- **Queue Management** - Distribute calls and tasks efficiently
 
-### Production Ready
-- **Database Integration** - PostgreSQL with Prisma ORM and optimized queries
-- **Caching Layer** - Redis integration for session management and performance optimization
-- **Monitoring & Observability** - Built-in metrics, health checks, and error tracking
-- **Scalable Architecture** - Designed for horizontal scaling and high availability
+### Revenue Cycle Management
+- **Billing Tracking** - Monitor billing and collections for practices
+- **Payment Processing** - Track payments and outstanding balances
+- **Insurance Claims** - Manage insurance claim processing
+- **Financial Reporting** - Revenue analytics and reporting
 
-## 🏗️ Architecture
+### Analytics & Reporting
+- **Performance Dashboards** - Real-time KPIs and metrics
+- **Client Reporting** - Generate reports for dental practices
+- **Team Performance** - Track virtual support team efficiency
+- **Revenue Analytics** - Financial performance insights
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Agent Registry │    │   MCP Gateway   │    │ Execution Engine│
-│                 │    │                 │    │                 │
-│ • Discovery     │◄──►│ • Protocol      │◄──►│ • Isolated VM   │
-│ • Publishing    │    │   Integration   │    │ • Sandboxing    │
-│ • Versioning    │    │ • Tool Mgmt     │    │ • Resource Mgmt │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Security & Monitoring Layer                  │
-│                                                                 │
-│ • Authentication    • Audit Logging    • Threat Detection      │
-│ • Authorization     • Performance      • Anomaly Detection     │
-│ • Rate Limiting     • Health Checks    • Compliance Reports    │
-└─────────────────────────────────────────────────────────────────┘
-```
+### Compliance & Security
+- **HIPAA Compliance** - Secure handling of dental patient data
+- **Audit Trails** - Complete logging of all patient interactions
+- **Data Encryption** - End-to-end security for sensitive information
+- **Access Controls** - Role-based permissions and security
 
-## 🛠️ Technology Stack
+## 🏗️ Technology Stack
 
 ### Backend
-- **Runtime**: Node.js with isolated-vm for secure execution
 - **Framework**: Next.js 15 with App Router
 - **Database**: PostgreSQL with Prisma ORM
-- **Caching**: Redis for session and performance optimization
 - **APIs**: tRPC with Zod validation
+- **Authentication**: NextAuth.js with role-based access
 
 ### Frontend
 - **Framework**: React 19 with Next.js 15
 - **Styling**: Tailwind CSS 4
+- **UI Components**: Shadcn/ui
 - **State Management**: tRPC + React Query
-- **TypeScript**: Full type safety throughout
 
-### Security
-- **Sandboxing**: isolated-vm with custom security policies
-- **Authentication**: JWT with secure session management
-- **Authorization**: Role-based access control (RBAC)
-- **Monitoring**: Comprehensive audit logging and threat detection
-
-### DevOps
-- **Containerization**: Docker with multi-stage builds
-- **Database Migrations**: Prisma migrate
-- **Monitoring**: Built-in metrics and health endpoints
-- **Deployment**: Vercel-ready with Docker support
+### Security & Compliance
+- **Data Protection**: Encryption at rest and in transit
+- **Authentication**: Multi-factor authentication support
+- **Audit Logging**: Complete activity tracking
+- **HIPAA Compliance**: Built-in privacy controls
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+
 - PostgreSQL 14+
-- Redis 6+
-- Docker (optional)
+- SMTP server for notifications
 
 ### Installation
 
 1. **Clone and install dependencies**
 ```bash
-git clone <repository>
-cd kreativsaas
+git clone https://github.com/Ipswich38/kreativlab.git
+cd kreativlab
 npm install
 ```
 
@@ -98,6 +88,7 @@ cp .env.example .env
 ```bash
 npx prisma migrate dev
 npx prisma generate
+npx prisma db seed
 ```
 
 4. **Start development server**
@@ -107,203 +98,104 @@ npm run dev
 
 5. **Open http://localhost:3000**
 
-### Docker Setup
+## 📊 Core Features
 
-```bash
-# Start all services
-docker-compose up -d
+### Dashboard
+- Overview of call center metrics
+- Practice performance summaries
+- Revenue cycle status
+- Team productivity metrics
 
-# View logs
-docker-compose logs -f
+### Practice Management
+- Add and manage dental practices
+- Track service agreements and contracts
+- Monitor practice-specific KPIs
+- Communication history
 
-# Stop services
-docker-compose down
-```
+### Call Center
+- Real-time call queue management
+- Call logging and history
+- Patient support ticket system
+- Performance analytics
 
-## 📚 API Reference
+### Revenue Management
+- Billing and collections tracking
+- Insurance claim management
+- Payment processing
+- Financial reporting
 
-### Agent Management
-- `POST /api/agents/publish` - Publish a new agent
-- `GET /api/agents/search` - Search and filter agents
-- `POST /api/agents/install` - Install agent for user
-- `POST /api/agents/execute` - Execute agent capability
+## 🔒 Security & Compliance
 
-### Instance Management
-- `POST /api/instances/create` - Create agent instance
-- `GET /api/instances` - List user instances
-- `DELETE /api/instances/:id` - Delete instance
+### HIPAA Compliance
+- Encrypted data storage and transmission
+- Access logging and audit trails
+- User authentication and authorization
+- Privacy controls and data minimization
 
-### Security & Monitoring
-- `GET /api/security/audit-logs` - Security audit trail
-- `GET /api/security/threats` - Active threat detection
-- `GET /api/monitoring/metrics` - Platform metrics
+### Security Features
+- Multi-factor authentication
+- Role-based access control
+- Session management
+- Secure API endpoints
 
-## 🔒 Security Features
+## 📈 Analytics
 
-### Execution Security
-- **Isolated VM Environment** - Complete JavaScript isolation with custom contexts
-- **Resource Limits** - Memory, CPU, and execution time constraints
-- **Network Restrictions** - Configurable domain allowlists and blocklists
-- **File System Isolation** - No direct file system access
+### Key Performance Indicators
+- Call response times
+- Patient satisfaction scores
+- Revenue cycle efficiency
+- Practice retention rates
 
-### Platform Security
-- **Code Analysis** - Static analysis for dangerous patterns and vulnerabilities
-- **Rate Limiting** - Per-user and per-agent execution limits
-- **Audit Logging** - Complete trail of all actions and security events
-- **Threat Detection** - Real-time monitoring with automated responses
-
-### Data Protection
-- **Encryption at Rest** - Database encryption for sensitive data
-- **Secure Communication** - TLS/HTTPS for all communications
-- **Secret Management** - Secure handling of API keys and credentials
-
-## 📊 Monitoring & Observability
-
-### Built-in Metrics
-- Agent execution performance and resource usage
-- Security events and threat detection alerts
-- Platform health and availability metrics
-- User activity and engagement analytics
-
-### Logging
-- Structured JSON logging with correlation IDs
-- Security audit trail with retention policies
-- Performance monitoring and bottleneck detection
-- Error tracking with stack traces and context
-
-### Health Checks
-- Database connectivity and performance
-- Redis cache availability and latency
-- Agent execution environment status
-- External service dependencies
+### Reporting
+- Custom report generation
+- Automated client reports
+- Performance dashboards
+- Export capabilities
 
 ## 🔧 Configuration
 
 ### Environment Variables
-See `.env.example` for complete configuration options including:
-- Database connection strings
-- Security settings and limits
-- Feature flags and toggles
-- External service integrations
-
-### Security Policies
-Configure execution security in the agent runtime:
-```typescript
-const securityPolicy: SecurityPolicy = {
-  allowedDomains: ['api.example.com'],
-  maxMemory: 128, // MB
-  maxExecutionTime: 30000, // ms
-  allowNetwork: true,
-  allowFileSystem: false,
-  sandbox: {
-    isolatedMemory: true,
-    isolatedNetwork: true,
-    containerized: true
-  }
-};
+```
+DATABASE_URL=postgresql://...
+NEXTAUTH_SECRET=your-secret
+NEXTAUTH_URL=http://localhost:3000
+SMTP_HOST=your-smtp-server
+SMTP_PORT=587
+SMTP_USER=your-email
+SMTP_PASS=your-password
 ```
 
-## 🧪 Testing
-
-```bash
-# Run all tests
-npm test
-
-# Unit tests
-npm run test:unit
-
-# Integration tests
-npm run test:integration
-
-# End-to-end tests
-npm run test:e2e
-
-# Coverage report
-npm run test:coverage
-```
-
-## 📈 Performance
-
-### Benchmarks
-- **Cold Start**: < 100ms for new agent instances
-- **Execution**: < 50ms overhead per agent call
-- **Throughput**: 1000+ concurrent agent executions
-- **Memory**: < 64MB baseline platform usage
-
-### Optimization
-- Connection pooling for database queries
-- Redis caching for frequently accessed data
-- Code splitting and lazy loading for frontend
-- Optimized Docker images with multi-stage builds
+### Features Configuration
+- Call center settings
+- Notification preferences
+- Report scheduling
+- Integration settings
 
 ## 🚢 Deployment
 
 ### Production Deployment
+1. Build the application: `npm run build`
+2. Set up production database
+3. Configure environment variables
+4. Deploy to your hosting platform
 
-1. **Build application**
-```bash
-npm run build
-```
+### Vercel Deployment
+- Optimized for Vercel deployment
+- Automatic builds from GitHub
+- Environment variable management
+- Database integration
 
-2. **Run database migrations**
-```bash
-npx prisma migrate deploy
-```
+## 📞 Support
 
-3. **Start production server**
-```bash
-npm start
-```
-
-### Docker Deployment
-```bash
-# Build production image
-docker build -t kreativlab:latest .
-
-# Run with docker-compose
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-### Environment Setup
-- Set up PostgreSQL database with connection pooling
-- Configure Redis cluster for session management
-- Set up monitoring and log aggregation
-- Configure backup and disaster recovery
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
-- Follow TypeScript strict mode requirements
-- Add tests for new features and bug fixes
-- Update documentation for API changes
-- Follow security best practices for agent code
+For support with KreativLab CRM:
+- **Documentation**: Coming soon
+- **Issues**: [GitHub Issues](https://github.com/Ipswich38/kreativlab/issues)
+- **Email**: support@kreativlab.com
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Documentation**: [docs.kreativlab.com](https://docs.kreativlab.com)
-- **Issues**: [GitHub Issues](https://github.com/your-org/kreativlab/issues)
-- **Security**: security@kreativlab.com for security vulnerabilities
-- **Community**: [Discord Server](https://discord.gg/kreativlab)
-
-## 🔮 Roadmap
-
-- [ ] WebSocket real-time communication for agents
-- [ ] Visual agent workflow builder
-- [ ] Multi-language agent support (Python, Go)
-- [ ] Kubernetes operator for enterprise deployment
-- [ ] Advanced analytics and machine learning insights
-- [ ] Agent marketplace with monetization features
+This project is licensed under the MIT License.
 
 ---
 
-Built with ❤️ using Next.js 15, TypeScript, and modern web technologies.
+Built specifically for dental administrative support services to maximize practice efficiency and profitability.

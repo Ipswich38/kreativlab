@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,195 +10,329 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User management for the CRM system
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String?
+  role        Role     @default(AGENT)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastLoginAt DateTime?
 
-  // Relations
-  agents            Agent[]
-  agentInstances    AgentInstance[]
-  permissions       UserPermission[]
-  auditLogs         SecurityAuditLog[]
-  agentReviews      AgentReview[]
+  // Call center operations
+  calls        Call[]
+  tickets      Ticket[]
+  activities   Activity[]
 
   @@map("users")
 }
 
-model Agent {
-  id          String   @id @default(cuid())
-  name        String
+enum Role {
+  ADMIN       // System administrator
+  MANAGER     // Call center manager
+  SUPERVISOR  // Team supervisor
+  AGENT       // Call center agent
+  READONLY    // Read-only access
+}
+
+// Dental practices (clients)
+model Practice {
+  id            String   @id @default(cuid())
+  name          String
+  address       String?
+  city          String?
+  state         String?
+  zipCode       String?
+  phone         String?
+  email         String?
+  website       String?
+  taxId         String?
+
+  // Practice details
+  practiceType  String?  // General, Orthodontics, Oral Surgery, etc.
+  numberOfChairs Int?
+  averagePatients Int?
+
+  // Service agreement
+  serviceLevel   ServiceLevel @default(BASIC)
+  contractStart  DateTime?
+  contractEnd    DateTime?
+  monthlyFee     Decimal?
+  isActive       Boolean  @default(true)
+
+  // Relationships
+  contacts       Contact[]
+  calls          Call[]
+  tickets        Ticket[]
+  billing        Billing[]
+  insuranceClaims InsuranceClaim[]
+  activities     Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("practices")
+}
+
+enum ServiceLevel {
+  BASIC     // Basic call answering
+  STANDARD  // Call answering + scheduling
+  PREMIUM   // Full administrative support
+  ENTERPRISE // Complete RCM + support
+}
+
+// Practice contacts (dentists, office managers, etc.)
+model Contact {
+  id         String   @id @default(cuid())
+  practiceId String
+  practice   Practice @relation(fields: [practiceId], references: [id], onDelete: Cascade)
+
+  firstName  String
+  lastName   String
+  title      String?  // Dr., Office Manager, Receptionist, etc.
+  email      String?
+  phone      String?
+  mobile     String?
+  isPrimary  Boolean  @default(false)
+  isActive   Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("contacts")
+}
+
+// Call logging and tracking
+model Call {
+  id         String   @id @default(cuid())
+  practiceId String
+  practice   Practice @relation(fields: [practiceId], references: [id])
+  agentId    String
+  agent      User     @relation(fields: [agentId], references: [id])
+
+  // Call details
+  callType   CallType
+  direction  CallDirection
+  phone      String?
+  duration   Int?     // Duration in seconds
+  notes      String?
+  disposition CallDisposition?
+
+  // Patient information (if applicable)
+  patientName String?
+  patientPhone String?
+  appointmentDate DateTime?
+
+  // Call outcome
+  isResolved Boolean @default(false)
+  followUpRequired Boolean @default(false)
+  followUpDate DateTime?
+
+  callStartTime DateTime @default(now())
+  callEndTime   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("calls")
+}
+
+enum CallType {
+  APPOINTMENT_SCHEDULING
+  APPOINTMENT_CONFIRMATION
+  APPOINTMENT_CANCELLATION
+  PATIENT_INQUIRY
+  BILLING_INQUIRY
+  INSURANCE_VERIFICATION
+  EMERGENCY
+  GENERAL_SUPPORT
+  FOLLOW_UP
+  OTHER
+}
+
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum CallDisposition {
+  COMPLETED
+  NO_ANSWER
+  BUSY
+  VOICEMAIL
+  CALLBACK_REQUESTED
+  TRANSFERRED
+  DISCONNECTED
+}
+
+// Support ticket system
+model Ticket {
+  id         String   @id @default(cuid())
+  practiceId String
+  practice   Practice @relation(fields: [practiceId], references: [id])
+  assignedToId String?
+  assignedTo User?    @relation(fields: [assignedToId], references: [id])
+
+  // Ticket details
+  subject    String
   description String
-  version     String
-  author      String
-  license     String   @default("MIT")
-  homepage    String?
-  repository  String?
-  category    String
-  tags        String[]
-  runtime     String   @default("isolated-vm")
-  memoryLimit Int      @default(128)
-  timeoutLimit Int     @default(30000)
-  code        String   @db.Text
-  manifest    Json
-  checksum    String
-  verified    Boolean  @default(false)
-  publishedAt DateTime @default(now())
-  downloadCount Int    @default(0)
-  rating      Float    @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  priority   Priority @default(MEDIUM)
+  status     TicketStatus @default(OPEN)
+  category   TicketCategory
 
-  // Relations
-  authorUser     User @relation(fields: [author], references: [id])
-  capabilities   AgentCapability[]
-  instances      AgentInstance[]
-  reviews        AgentReview[]
-  rateLimits     AgentRateLimit?
+  // Patient information (if applicable)
+  patientName String?
+  patientPhone String?
+  patientEmail String?
 
-  @@map("agents")
+  // Resolution
+  resolution String?
+  resolvedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tickets")
 }
 
-model AgentCapability {
-  id          String @id @default(cuid())
-  agentId     String
-  name        String
-  description String
-  inputSchema Json
-  outputSchema Json
-  category    String
-  tags        String[]
-
-  // Relations
-  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
-
-  @@map("agent_capabilities")
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
 
-model AgentRateLimit {
-  id                 String @id @default(cuid())
-  agentId            String @unique
-  requestsPerSecond  Int    @default(10)
-  requestsPerMinute  Int    @default(100)
-  requestsPerHour    Int    @default(1000)
-
-  // Relations
-  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
-
-  @@map("agent_rate_limits")
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  PENDING
+  RESOLVED
+  CLOSED
 }
 
-model AgentInstance {
-  id          String      @id @default(cuid())
-  agentId     String
-  userId      String
-  status      String      @default("idle")
-  config      Json        @default("{}")
-  environment Json        @default("{}")
-  memoryUsed  Float       @default(0)
-  cpuUsed     Float       @default(0)
-  networkUsed Float       @default(0)
-  createdAt   DateTime    @default(now())
-  lastActiveAt DateTime   @default(now())
-  terminatedAt DateTime?
-
-  // Relations
-  agent      Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  executions AgentExecution[]
-
-  @@map("agent_instances")
+enum TicketCategory {
+  APPOINTMENT_ISSUE
+  BILLING_QUESTION
+  INSURANCE_CLAIM
+  PATIENT_COMPLAINT
+  TECHNICAL_SUPPORT
+  GENERAL_INQUIRY
+  EMERGENCY
 }
 
-model AgentExecution {
-  id           String   @id @default(cuid())
-  instanceId   String
-  requestId    String   @unique
-  capability   String
-  input        Json
-  output       Json?
-  success      Boolean
-  error        Json?
-  executionTime Int
-  memoryUsed   Float
-  cpuTime      Float
-  logs         Json     @default("[]")
-  startTime    DateTime @default(now())
-  endTime      DateTime?
+// Billing and revenue cycle management
+model Billing {
+  id         String   @id @default(cuid())
+  practiceId String
+  practice   Practice @relation(fields: [practiceId], references: [id])
 
-  // Relations
-  instance AgentInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  // Billing period
+  billingMonth Int
+  billingYear  Int
 
-  @@map("agent_executions")
+  // Amounts
+  totalCharges    Decimal
+  totalPayments   Decimal
+  totalAdjustments Decimal
+  netRevenue      Decimal
+  outstandingBalance Decimal
+
+  // Collections metrics
+  collectionRate    Decimal?
+  daysInAR         Int?     // Days in Accounts Receivable
+  agingOver90Days  Decimal?
+
+  // Status
+  status        BillingStatus @default(PENDING)
+  processedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([practiceId, billingMonth, billingYear])
+  @@map("billing")
 }
 
-model AgentReview {
-  id        String   @id @default(cuid())
-  agentId   String
-  userId    String
-  rating    Int
-  comment   String
+enum BillingStatus {
+  PENDING
+  PROCESSED
+  PAID
+  DISPUTED
+  WRITTEN_OFF
+}
+
+// Insurance claims management
+model InsuranceClaim {
+  id         String   @id @default(cuid())
+  practiceId String
+  practice   Practice @relation(fields: [practiceId], references: [id])
+
+  // Claim details
+  claimNumber     String   @unique
+  patientName     String
+  patientId       String?
+  insuranceCarrier String
+  policyNumber    String?
+  serviceDate     DateTime
+  submissionDate  DateTime @default(now())
+
+  // Financial details
+  chargedAmount   Decimal
+  allowedAmount   Decimal?
+  paidAmount      Decimal?
+  patientPortion  Decimal?
+
+  // Status tracking
+  status          ClaimStatus @default(SUBMITTED)
+  denialReason    String?
+  lastStatusUpdate DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("insurance_claims")
+}
+
+enum ClaimStatus {
+  SUBMITTED
+  PENDING
+  APPROVED
+  PAID
+  DENIED
+  APPEALED
+  WRITTEN_OFF
+}
+
+// Activity logging for audit trails
+model Activity {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  practiceId String?
+  practice   Practice? @relation(fields: [practiceId], references: [id])
+
+  // Activity details
+  action     String   // "created_call", "updated_ticket", etc.
+  entityType String   // "call", "ticket", "practice", etc.
+  entityId   String?  // ID of the entity being acted upon
+  details    Json?    // Additional activity details
+  ipAddress  String?
+  userAgent  String?
+
   createdAt DateTime @default(now())
 
-  // Relations
-  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([agentId, userId])
-  @@map("agent_reviews")
+  @@map("activities")
 }
 
-model UserPermission {
-  id          String   @id @default(cuid())
-  userId      String
-  permissions String[]
-  maxAgents   Int      @default(10)
-  maxMemoryPerAgent Int @default(128)
-  maxConcurrentExecutions Int @default(5)
-  maxExecutionTime Int @default(30000)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+// System configuration
+model Settings {
+  id    String @id @default("system")
+  key   String @unique
+  value Json
 
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([userId])
-  @@map("user_permissions")
-}
-
-model SecurityAuditLog {
-  id        String   @id @default(cuid())
-  timestamp DateTime @default(now())
-  userId    String?
-  agentId   String?
-  action    String
-  resource  String
-  outcome   String
-  riskLevel String
-  details   Json
-  ip        String?
-  userAgent String?
-
-  // Relations
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@map("security_audit_logs")
-}
-
-model ThreatDetection {
-  id          String   @id @default(cuid())
-  timestamp   DateTime @default(now())
-  type        String
-  severity    String
-  source      String
-  target      String?
-  description String
-  metadata    Json
-  resolved    Boolean  @default(false)
-  resolvedAt  DateTime?
-  resolvedBy  String?
-
-  @@map("threat_detections")
+  @@map("settings")
 }

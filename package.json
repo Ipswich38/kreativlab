@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@eslint/eslintrc": "^3",
+    "@react-email/render": "^1.4.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.75.0",
     "@tailwindcss/postcss": "^4",

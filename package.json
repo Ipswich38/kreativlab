@@ -59,6 +59,7 @@
     "nodemailer": "^7.0.9",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "resend": "^6.2.0",
     "superjson": "^2.2.2",
     "tailwindcss": "^4",
     "typescript": "^5",

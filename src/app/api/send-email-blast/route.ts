@@ -77,6 +77,8 @@ export async function POST(request: NextRequest) {
 
     // Skip verification for now - try sending directly
     console.log('Skipping SMTP verification, attempting to send emails...')
+    console.log('Using email:', process.env.OUTLOOK_EMAIL || 'support@happyteethsupportservices.com')
+    console.log('Password set:', !!(process.env.OUTLOOK_PASSWORD || 'Robes2013$'))
 
     const results = []
     const errors = []
@@ -84,6 +86,8 @@ export async function POST(request: NextRequest) {
     // Send emails to each contact
     for (const contact of contacts) {
       try {
+        console.log(`Attempting to send email to: ${contact.email}`)
+
         // Replace template variables in message
         const personalizedMessage = replaceTemplateVariables(message, contact)
         const personalizedSubject = replaceTemplateVariables(subject, contact)
@@ -92,7 +96,7 @@ export async function POST(request: NextRequest) {
         const htmlMessage = personalizedMessage.replace(/\n/g, '<br>')
 
         const mailOptions = {
-          from: `"${senderName}" <${process.env.OUTLOOK_EMAIL}>`,
+          from: `"${senderName}" <${process.env.OUTLOOK_EMAIL || 'support@happyteethsupportservices.com'}>`,
           to: contact.email,
           subject: personalizedSubject,
           text: personalizedMessage,
@@ -110,11 +114,15 @@ export async function POST(request: NextRequest) {
           `
         }
 
-        await transporter.sendMail(mailOptions)
+        console.log(`Sending email from: ${mailOptions.from} to: ${mailOptions.to}`)
+        const info = await transporter.sendMail(mailOptions)
+        console.log(`Email sent successfully to ${contact.email}:`, info.messageId)
+
         results.push({
           contact: `${contact.firstName} ${contact.lastName}`,
           email: contact.email,
-          status: 'sent'
+          status: 'sent',
+          messageId: info.messageId
         })
 
         // Add a small delay between emails to avoid overwhelming the SMTP server

@@ -50,19 +50,19 @@ interface EmailContact {
 }
 
 
-const mockRecentActivity = [
-  { id: 1, type: 'call', description: 'Inbound call from Smile Dental Care', time: '2 mins ago', status: 'completed' },
-  { id: 2, type: 'ticket', description: 'Insurance claim submission - Delta Dental', time: '15 mins ago', status: 'in_progress' },
-  { id: 3, type: 'call', description: 'Emergency appointment scheduling', time: '32 mins ago', status: 'completed' },
-  { id: 4, type: 'ticket', description: 'Billing system integration support', time: '1 hour ago', status: 'urgent' },
-  { id: 5, type: 'call', description: 'Post-surgery follow-up call', time: '2 hours ago', status: 'completed' },
+const recentMarketingActivity = [
+  { id: 1, type: 'email', description: 'Email blast sent to 25 dental practices - "Administrative Support Services"', time: '30 mins ago', status: 'completed' },
+  { id: 2, type: 'contact', description: 'New prospect added: Norton Family Dental', time: '1 hour ago', status: 'completed' },
+  { id: 3, type: 'email', description: 'Follow-up email campaign to hot leads', time: '2 hours ago', status: 'completed' },
+  { id: 4, type: 'contact', description: 'Contact updated: Smile On Nashville - marked as hot lead', time: '3 hours ago', status: 'completed' },
+  { id: 5, type: 'email', description: 'Email blast scheduled for dental expansion prospects', time: '4 hours ago', status: 'in_progress' },
 ]
 
-const mockPractices = [
-  { name: 'Smile Dental Care', serviceLevel: 'Premium', status: 'active', lastContact: '2 hours ago' },
-  { name: 'Family Dentistry Plus', serviceLevel: 'Standard', status: 'active', lastContact: '4 hours ago' },
-  { name: 'Advanced Oral Surgery', serviceLevel: 'Enterprise', status: 'active', lastContact: '1 day ago' },
-  { name: 'Bright Smiles Orthodontics', serviceLevel: 'Basic', status: 'active', lastContact: '2 days ago' },
+const emailCampaignStats = [
+  { campaign: 'Administrative Support Outreach', sent: 45, opened: 18, responded: 3, status: 'active' },
+  { campaign: 'Front Desk Coordinator Services', sent: 32, opened: 12, responded: 2, status: 'active' },
+  { campaign: 'Virtual Assistant Follow-up', sent: 28, opened: 15, responded: 5, status: 'completed' },
+  { campaign: 'Practice Expansion Support', sent: 38, opened: 22, responded: 4, status: 'active' },
 ]
 
 // Helper function to parse name into first and last name
@@ -236,7 +236,11 @@ const csvData = [
   { no: 97, name: 'Yoon Lyou', contact: '2153224888', email: 'joy-for-dentistry@comcast.net', clinic: 'Joy For Dentistry, LLC', needs: '' },
   { no: 98, name: 'David Stevens', contact: '9733660694', email: 'design_a_smile@yahoo.com', clinic: '', needs: '' },
   { no: 99, name: 'Gordon Dufour', contact: '9739517321', email: 'dufour7@optonline.net', clinic: '', needs: '' },
-  { no: 100, name: 'Ilhyun Jung', contact: '7184264343', email: 'drdentist9@gmail.com', clinic: 'Ilhyun Jung DDS', needs: '' }
+  { no: 100, name: 'Ilhyun Jung', contact: '7184264343', email: 'drdentist9@gmail.com', clinic: 'Ilhyun Jung DDS', needs: '' },
+  // Test accounts for email blast testing
+  { no: 101, name: 'Kreativ Loops', contact: '555-0001', email: 'kreativloops@gmail.com', clinic: 'KreativLoops Digital', needs: 'Test account for email blast functionality' },
+  { no: 102, name: 'Cherwin Fernandez', contact: '555-0002', email: 'fernandez.cherwin@gmail.com', clinic: 'Fernandez Consulting', needs: 'Test account for email blast functionality' },
+  { no: 103, name: 'IO KreativLoops', contact: '555-0003', email: 'io.kreativloops@gmail.com', clinic: 'IO KreativLoops Tech', needs: 'Test account for email blast functionality' }
 ]
 
 // Process all CSV data into contact records
@@ -614,29 +618,26 @@ export default function DashboardLayout() {
             </div>
           </div>
 
-          {/* Recent Activity & Practice Status */}
+          {/* Recent Marketing Activity & Email Campaign Performance */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Activity */}
+            {/* Recent Marketing Activity */}
             <div className="bg-white rounded-lg shadow">
               <div className="p-6 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Recent Marketing Activity</h3>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
-                  {mockRecentActivity.map((activity) => (
+                  {recentMarketingActivity.map((activity) => (
                     <div key={activity.id} className="flex items-start space-x-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        activity.status === 'urgent' ? 'bg-red-100' :
                         activity.status === 'in_progress' ? 'bg-yellow-100' : 'bg-green-100'
                       }`}>
-                        {activity.type === 'call' ? (
-                          <Phone className={`w-4 h-4 ${
-                            activity.status === 'urgent' ? 'text-red-600' :
+                        {activity.type === 'email' ? (
+                          <Mail className={`w-4 h-4 ${
                             activity.status === 'in_progress' ? 'text-yellow-600' : 'text-green-600'
                           }`} />
                         ) : (
-                          <Ticket className={`w-4 h-4 ${
-                            activity.status === 'urgent' ? 'text-red-600' :
+                          <Users className={`w-4 h-4 ${
                             activity.status === 'in_progress' ? 'text-yellow-600' : 'text-green-600'
                           }`} />
                         )}
@@ -646,7 +647,6 @@ export default function DashboardLayout() {
                         <p className="text-sm text-gray-500">{activity.time}</p>
                       </div>
                       <div className="flex-shrink-0">
-                        {activity.status === 'urgent' && <AlertCircle className="w-5 h-5 text-red-500" />}
                         {activity.status === 'in_progress' && <Clock className="w-5 h-5 text-yellow-500" />}
                         {activity.status === 'completed' && <CheckCircle className="w-5 h-5 text-green-500" />}
                       </div>
@@ -656,31 +656,46 @@ export default function DashboardLayout() {
               </div>
             </div>
 
-            {/* Practice Status */}
+            {/* Email Campaign Performance */}
             <div className="bg-white rounded-lg shadow">
               <div className="p-6 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">Practice Status</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Email Campaign Performance</h3>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
-                  {mockPractices.map((practice, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Building2 className="w-5 h-5 text-blue-600" />
+                  {emailCampaignStats.map((campaign, index) => (
+                    <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-medium text-gray-900">{campaign.campaign}</p>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          campaign.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {campaign.status}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                          <p className="text-lg font-semibold text-gray-900">{campaign.sent}</p>
+                          <p className="text-xs text-gray-500">Sent</p>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{practice.name}</p>
-                          <p className="text-xs text-gray-500">{practice.serviceLevel} Plan</p>
+                          <p className="text-lg font-semibold text-blue-600">{campaign.opened}</p>
+                          <p className="text-xs text-gray-500">Opened</p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-semibold text-green-600">{campaign.responded}</p>
+                          <p className="text-xs text-gray-500">Responded</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                          <span className="text-xs text-gray-500">Active</span>
-                        </div>
-                        <p className="text-xs text-gray-400">{practice.lastContact}</p>
+                      <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${(campaign.opened / campaign.sent) * 100}%` }}
+                        ></div>
                       </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {Math.round((campaign.opened / campaign.sent) * 100)}% open rate
+                      </p>
                     </div>
                   ))}
                 </div>

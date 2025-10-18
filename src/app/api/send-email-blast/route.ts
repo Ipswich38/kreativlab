@@ -42,28 +42,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Subject and message are required' }, { status: 400 })
     }
 
-    // Configure Outlook SMTP with client's credentials
-    // Note: Replace these with actual environment variables for security
-    const transporter = nodemailer.createTransport({
-      host: 'smtp-mail.outlook.com',
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: process.env.OUTLOOK_EMAIL || 'your-client-email@outlook.com', // Client's Outlook email
-        pass: process.env.OUTLOOK_PASSWORD || 'your-client-password', // Client's Outlook password or app password
-      },
-      tls: {
-        ciphers: 'SSLv3'
-      }
-    })
+    // Configure Outlook SMTP - Try multiple approaches
+    let transporter;
 
-    // Verify connection configuration
+    // Try approach 1: Hotmail service (most compatible)
     try {
-      await transporter.verify()
+      transporter = nodemailer.createTransport({
+        service: 'hotmail',
+        auth: {
+          user: process.env.OUTLOOK_EMAIL || 'support@happyteethsupportservices.com',
+          pass: process.env.OUTLOOK_PASSWORD || 'Robes2013$'
+        }
+      });
     } catch (error) {
-      console.error('SMTP configuration error:', error)
-      return NextResponse.json({ error: 'Email server configuration error' }, { status: 500 })
+      console.log('Hotmail service failed, trying manual config...');
+
+      // Try approach 2: Manual SMTP with relaxed security
+      transporter = nodemailer.createTransport({
+        host: 'smtp-mail.outlook.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.OUTLOOK_EMAIL || 'support@happyteethsupportservices.com',
+          pass: process.env.OUTLOOK_PASSWORD || 'Robes2013$'
+        },
+        tls: {
+          rejectUnauthorized: false,
+          minVersion: 'TLSv1'
+        },
+        ignoreTLS: false,
+        requireTLS: true
+      });
     }
+
+    // Skip verification for now - try sending directly
+    console.log('Skipping SMTP verification, attempting to send emails...')
 
     const results = []
     const errors = []

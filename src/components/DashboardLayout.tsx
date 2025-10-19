@@ -23,7 +23,11 @@ import {
   Download,
   Send,
   CheckSquare,
-  Square
+  Square,
+  Search,
+  MapPin,
+  Globe,
+  Target
 } from 'lucide-react'
 
 interface DashboardStats {
@@ -47,6 +51,26 @@ interface EmailContact {
   tags: string[]
   status: 'active' | 'inactive' | 'bounced'
   createdAt: string
+}
+
+interface DentalClinicLead {
+  id: string
+  name: string
+  address: string
+  phone?: string
+  email?: string
+  website?: string
+  contactPerson?: string
+  specialties: string[]
+  needsIndicators: string[]
+  sourceUrl: string
+  location: {
+    zipCode: string
+    city: string
+    state: string
+  }
+  businessSize?: 'small' | 'medium' | 'large'
+  lastUpdated: string
 }
 
 
@@ -275,6 +299,22 @@ export default function DashboardLayout() {
     message: '',
     senderName: 'Happy Teeth Support Services'
   })
+
+  // Lead Generation State
+  const [scrapedLeads, setScrapedLeads] = useState<DentalClinicLead[]>([])
+  const [isScrapingLoading, setIsScrapingLoading] = useState(false)
+  const [scrapingLocation, setScrapingLocation] = useState({
+    zipCode: '',
+    city: '',
+    state: ''
+  })
+  const [scrapingFilters, setScrapingFilters] = useState({
+    hasEmail: false,
+    hasPhone: false,
+    hasWebsite: false,
+    specialties: [] as string[]
+  })
+  const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set())
   const [sendingEmail, setSendingEmail] = useState(false)
   const [newContact, setNewContact] = useState({
     firstName: '',
@@ -452,6 +492,81 @@ export default function DashboardLayout() {
     setSendingEmail(false)
   }
 
+  // Lead Generation Functions
+  const handleScrapeDentalClinics = async () => {
+    if (!scrapingLocation.zipCode && !scrapingLocation.city) {
+      alert('Please enter a ZIP code or city to search')
+      return
+    }
+
+    setIsScrapingLoading(true)
+    try {
+      const response = await fetch('/api/scrape-dental-clinics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: scrapingLocation,
+          filters: scrapingFilters
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setScrapedLeads(data.data.leads)
+        alert(`✅ Found ${data.data.leads.length} dental clinic leads!`)
+      } else {
+        throw new Error(data.error || 'Scraping failed')
+      }
+    } catch (error) {
+      console.error('Scraping error:', error)
+      alert(`❌ Scraping failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+    setIsScrapingLoading(false)
+  }
+
+  const handleConvertLeadsToContacts = () => {
+    if (selectedLeads.size === 0) {
+      alert('Please select leads to convert to contacts')
+      return
+    }
+
+    const leadsToConvert = scrapedLeads.filter(lead => selectedLeads.has(lead.id))
+    const newContacts: EmailContact[] = leadsToConvert.map(lead => ({
+      id: `lead-${lead.id}`,
+      firstName: lead.contactPerson ? lead.contactPerson.split(' ')[0] : lead.name.split(' ')[0],
+      lastName: lead.contactPerson ? lead.contactPerson.split(' ').slice(1).join(' ') : lead.name.split(' ').slice(1).join(' ') || 'Practice',
+      email: lead.email || '',
+      company: lead.name,
+      phone: lead.phone,
+      tags: ['scraped-lead', ...lead.specialties, ...lead.needsIndicators],
+      status: (lead.email ? 'active' : 'inactive') as 'active' | 'inactive' | 'bounced',
+      createdAt: new Date().toISOString().split('T')[0]
+    }))
+
+    setContacts(prev => [...prev, ...newContacts])
+    setSelectedLeads(new Set())
+    alert(`✅ Converted ${newContacts.length} leads to contacts`)
+  }
+
+  const toggleLeadSelection = (leadId: string) => {
+    const newSelected = new Set(selectedLeads)
+    if (newSelected.has(leadId)) {
+      newSelected.delete(leadId)
+    } else {
+      newSelected.add(leadId)
+    }
+    setSelectedLeads(newSelected)
+  }
+
+  const toggleAllLeads = () => {
+    if (selectedLeads.size === scrapedLeads.length) {
+      setSelectedLeads(new Set())
+    } else {
+      setSelectedLeads(new Set(scrapedLeads.map(lead => lead.id)))
+    }
+  }
+
   // Calculate email marketing statistics based on current contacts
   const emailStats: DashboardStats = {
     totalCalls: contacts.length, // Total contacts
@@ -496,6 +611,13 @@ export default function DashboardLayout() {
             <Mail size={20} className="mr-3" />
             Email Contacts
           </button>
+          <button
+            onClick={() => setActiveTab('lead-generation')}
+            className={`flex items-center w-full px-6 py-3 text-left ${activeTab === 'lead-generation' ? 'text-gray-700 bg-blue-50 border-r-4 border-blue-500' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
+            <Search size={20} className="mr-3" />
+            Lead Generation
+          </button>
         </nav>
 
         <div className="absolute bottom-0 w-full p-6 border-t">
@@ -536,6 +658,7 @@ export default function DashboardLayout() {
               <h2 className="text-xl font-semibold text-gray-800">
                 {activeTab === 'dashboard' && 'Dashboard'}
                 {activeTab === 'email-contacts' && 'Email Contacts'}
+                {activeTab === 'lead-generation' && 'Lead Generation'}
               </h2>
             </div>
             <div className="flex items-center space-x-4">
@@ -880,7 +1003,278 @@ export default function DashboardLayout() {
             </div>
           )}
 
-          {activeTab !== 'dashboard' && activeTab !== 'email-contacts' && (
+          {activeTab === 'lead-generation' && (
+            <div className="p-6">
+              {/* Search Form */}
+              <div className="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Find Dental Clinics</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <MapPin size={16} className="inline mr-1" />
+                      ZIP Code
+                    </label>
+                    <input
+                      type="text"
+                      value={scrapingLocation.zipCode}
+                      onChange={(e) => setScrapingLocation(prev => ({ ...prev, zipCode: e.target.value }))}
+                      placeholder="e.g., 90210"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      value={scrapingLocation.city}
+                      onChange={(e) => setScrapingLocation(prev => ({ ...prev, city: e.target.value }))}
+                      placeholder="e.g., Beverly Hills"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      State
+                    </label>
+                    <input
+                      type="text"
+                      value={scrapingLocation.state}
+                      onChange={(e) => setScrapingLocation(prev => ({ ...prev, state: e.target.value }))}
+                      placeholder="e.g., CA"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Filters */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Filters</label>
+                  <div className="flex flex-wrap gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={scrapingFilters.hasEmail}
+                        onChange={(e) => setScrapingFilters(prev => ({ ...prev, hasEmail: e.target.checked }))}
+                        className="mr-2"
+                      />
+                      Must have email
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={scrapingFilters.hasPhone}
+                        onChange={(e) => setScrapingFilters(prev => ({ ...prev, hasPhone: e.target.checked }))}
+                        className="mr-2"
+                      />
+                      Must have phone
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={scrapingFilters.hasWebsite}
+                        onChange={(e) => setScrapingFilters(prev => ({ ...prev, hasWebsite: e.target.checked }))}
+                        className="mr-2"
+                      />
+                      Must have website
+                    </label>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleScrapeDentalClinics}
+                  disabled={isScrapingLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                  {isScrapingLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Searching...
+                    </>
+                  ) : (
+                    <>
+                      <Search size={16} className="mr-2" />
+                      Find Dental Clinics
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Results */}
+              {scrapedLeads.length > 0 && (
+                <div className="bg-white rounded-lg shadow">
+                  <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Found {scrapedLeads.length} Dental Clinic Leads
+                    </h3>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={toggleAllLeads}
+                        className="text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        {selectedLeads.size === scrapedLeads.length ? 'Unselect All' : 'Select All'}
+                      </button>
+                      {selectedLeads.size > 0 && (
+                        <button
+                          onClick={handleConvertLeadsToContacts}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
+                        >
+                          Convert {selectedLeads.size} to Contacts
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Select
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Clinic Information
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Contact Details
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Specialties
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Needs Indicators
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {scrapedLeads.map((lead) => (
+                          <tr key={lead.id} className={selectedLeads.has(lead.id) ? 'bg-blue-50' : ''}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <button
+                                onClick={() => toggleLeadSelection(lead.id)}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                {selectedLeads.has(lead.id) ? (
+                                  <CheckSquare size={20} />
+                                ) : (
+                                  <Square size={20} />
+                                )}
+                              </button>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">{lead.name}</div>
+                                <div className="text-sm text-gray-500">{lead.address}</div>
+                                {lead.contactPerson && (
+                                  <div className="text-sm text-blue-600">Contact: {lead.contactPerson}</div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                {lead.phone && (
+                                  <div className="text-sm text-gray-900 flex items-center">
+                                    <Phone size={14} className="mr-1" />
+                                    {lead.phone}
+                                  </div>
+                                )}
+                                {lead.email && (
+                                  <div className="text-sm text-gray-900 flex items-center">
+                                    <Mail size={14} className="mr-1" />
+                                    {lead.email}
+                                  </div>
+                                )}
+                                {lead.website && (
+                                  <div className="text-sm text-gray-900 flex items-center">
+                                    <Globe size={14} className="mr-1" />
+                                    <a href={lead.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                      Website
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex flex-wrap gap-1">
+                                {lead.specialties.map((specialty, index) => (
+                                  <span
+                                    key={index}
+                                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                  >
+                                    {specialty}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex flex-wrap gap-1">
+                                {lead.needsIndicators.map((indicator, index) => (
+                                  <span
+                                    key={index}
+                                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                                  >
+                                    <Target size={12} className="mr-1" />
+                                    {indicator}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <div className="flex justify-end space-x-2">
+                                {lead.website && (
+                                  <a
+                                    href={lead.website}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-900"
+                                  >
+                                    <Globe size={16} />
+                                  </a>
+                                )}
+                                {lead.phone && (
+                                  <a
+                                    href={`tel:${lead.phone}`}
+                                    className="text-green-600 hover:text-green-900"
+                                  >
+                                    <Phone size={16} />
+                                  </a>
+                                )}
+                                {lead.email && (
+                                  <a
+                                    href={`mailto:${lead.email}`}
+                                    className="text-purple-600 hover:text-purple-900"
+                                  >
+                                    <Mail size={16} />
+                                  </a>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {scrapedLeads.length === 0 && !isScrapingLoading && (
+                <div className="text-center py-12 bg-white rounded-lg shadow">
+                  <Search className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No leads found yet</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Enter a location above to start finding dental clinics that need administrative support.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab !== 'dashboard' && activeTab !== 'email-contacts' && activeTab !== 'lead-generation' && (
             <div className="text-center py-12">
               <div className="text-gray-400">
                 <div className="text-lg font-medium">Coming Soon</div>

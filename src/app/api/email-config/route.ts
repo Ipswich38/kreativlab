@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     switch (config.provider) {
       case 'gmail':
-        transporter = nodemailer.createTransporter({
+        transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
             user: config.email,
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         break
 
       case 'outlook':
-        transporter = nodemailer.createTransporter({
+        transporter = nodemailer.createTransport({
           host: 'smtp-mail.outlook.com',
           port: 587,
           secure: false,
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
         break
 
       case 'smtp':
-        transporter = nodemailer.createTransporter({
+        transporter = nodemailer.createTransport({
           host: config.host,
           port: config.port,
           secure: config.secure,

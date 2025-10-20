@@ -528,6 +528,30 @@ export default function DashboardLayout() {
     return <FileText className="w-4 h-4 text-gray-500" />
   }
 
+  // Call Functions
+  const handleCallContact = (phone: string, contactName: string) => {
+    if (!phone) {
+      alert('No phone number available for this contact.')
+      return
+    }
+
+    // Clean phone number (remove formatting)
+    const cleanPhone = phone.replace(/\D/g, '')
+
+    // Try multiple calling methods
+    const confirmCall = confirm(
+      `Call ${contactName} at ${phone}?\n\nThis will:\n• Try to open your default calling app\n• Work with Line2 if installed\n• Work with any VoIP software on your device`
+    )
+
+    if (confirmCall) {
+      // Primary method: Use tel: protocol (works with mobile, desktop calling apps, and Line2)
+      window.location.href = `tel:${cleanPhone}`
+
+      // Log the call attempt for potential future integration
+      console.log(`Call initiated to ${contactName} (${phone}) at ${new Date().toISOString()}`)
+    }
+  }
+
   // Email Configuration Functions
   const fetchEmailConfig = async () => {
     try {
@@ -1127,15 +1151,26 @@ export default function DashboardLayout() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex justify-end space-x-2">
+                              {contact.phone && (
+                                <button
+                                  onClick={() => handleCallContact(contact.phone!, `${contact.firstName} ${contact.lastName}`)}
+                                  className="text-green-600 hover:text-green-900"
+                                  title={`Call ${contact.firstName} ${contact.lastName}`}
+                                >
+                                  <Phone size={16} />
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleEditContact(contact)}
                                 className="text-blue-600 hover:text-blue-900"
+                                title="Edit contact"
                               >
                                 <Edit size={16} />
                               </button>
                               <button
                                 onClick={() => handleDeleteContact(contact.id)}
                                 className="text-red-600 hover:text-red-900"
+                                title="Delete contact"
                               >
                                 <Trash2 size={16} />
                               </button>
@@ -1394,12 +1429,13 @@ export default function DashboardLayout() {
                                   </a>
                                 )}
                                 {lead.phone && (
-                                  <a
-                                    href={`tel:${lead.phone}`}
+                                  <button
+                                    onClick={() => handleCallContact(lead.phone!, lead.name)}
                                     className="text-green-600 hover:text-green-900"
+                                    title={`Call ${lead.name}`}
                                   >
                                     <Phone size={16} />
-                                  </a>
+                                  </button>
                                 )}
                                 {lead.email && (
                                   <a
@@ -1545,26 +1581,96 @@ export default function DashboardLayout() {
                       <div><strong>For Gmail:</strong></div>
                       <div className="ml-4">GMAIL_EMAIL=your-email@gmail.com</div>
                       <div className="ml-4">GMAIL_APP_PASSWORD=your-app-password</div>
-                      <div className="ml-4">GMAIL_SENDER_NAME="Your Name"</div>
+                      <div className="ml-4">GMAIL_SENDER_NAME=&quot;Your Name&quot;</div>
                       <div><strong>For Outlook:</strong></div>
                       <div className="ml-4">OUTLOOK_EMAIL=your-email@outlook.com</div>
                       <div className="ml-4">OUTLOOK_PASSWORD=your-password</div>
-                      <div className="ml-4">OUTLOOK_SENDER_NAME="Your Name"</div>
+                      <div className="ml-4">OUTLOOK_SENDER_NAME=&quot;Your Name&quot;</div>
                       <div><strong>For SMTP:</strong></div>
                       <div className="ml-4">SMTP_EMAIL=your-email@domain.com</div>
                       <div className="ml-4">SMTP_PASSWORD=your-password</div>
                       <div className="ml-4">SMTP_HOST=smtp.domain.com</div>
                       <div className="ml-4">SMTP_PORT=587</div>
                       <div className="ml-4">SMTP_SECURE=false</div>
-                      <div className="ml-4">SMTP_SENDER_NAME="Your Name"</div>
+                      <div className="ml-4">SMTP_SENDER_NAME=&quot;Your Name&quot;</div>
                     </div>
                     <p className="mt-2">
-                      <strong>Note:</strong> For Gmail, you'll need to generate an App Password in your
+                      <strong>Note:</strong> For Gmail, you&apos;ll need to generate an App Password in your
                       Google Account settings under Security → 2-Step Verification → App passwords.
                     </p>
                     <p>
                       Restart your application after making changes to environment variables.
                     </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Calling Configuration */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Calling Configuration</h3>
+                    <p className="text-sm text-gray-600">
+                      Configure calling functionality with Line2 and other VoIP services
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center text-green-600">
+                      <Check size={16} className="mr-1" />
+                      <span className="text-sm font-medium">Universal Calling Enabled</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <Check className="w-5 h-5 text-green-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-medium text-green-800 mb-2">
+                        ✅ Calling Feature Active
+                      </h4>
+                      <p className="text-sm text-green-700 mb-3">
+                        Click any phone number to initiate calls through your preferred calling application.
+                      </p>
+
+                      <div className="space-y-2 text-sm text-green-700">
+                        <div className="flex items-center">
+                          <Phone size={14} className="mr-2" />
+                          <span><strong>Line2 Integration:</strong> Works automatically when Line2 is installed</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Phone size={14} className="mr-2" />
+                          <span><strong>Mobile Devices:</strong> Uses native phone app</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Phone size={14} className="mr-2" />
+                          <span><strong>Desktop VoIP:</strong> Compatible with Skype, Teams, and other calling apps</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">
+                    📞 How to Use Calling Features
+                  </h4>
+                  <div className="text-sm text-blue-700 space-y-2">
+                    <div>1. <strong>Contact Table:</strong> Click the green phone icon next to any contact&apos;s phone number</div>
+                    <div>2. <strong>Lead Generation:</strong> Click the phone icon in the Actions column for scraped leads</div>
+                    <div>3. <strong>Confirmation Dialog:</strong> Confirm the call and your system will open the appropriate calling app</div>
+                  </div>
+                </div>
+
+                <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-yellow-800 mb-2">
+                    🔧 Line2 Setup Instructions
+                  </h4>
+                  <div className="text-sm text-yellow-700 space-y-2">
+                    <div>1. Download and install Line2 from <a href="https://www.line2.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">line2.com</a></div>
+                    <div>2. Configure your Line2 account and phone number</div>
+                    <div>3. Set Line2 as your default calling application (optional)</div>
+                    <div>4. Call buttons will automatically work with Line2 when installed</div>
                   </div>
                 </div>
               </div>

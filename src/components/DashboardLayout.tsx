@@ -22,7 +22,12 @@ import {
   Search,
   MapPin,
   Globe,
-  Target
+  Target,
+  Paperclip,
+  FileText,
+  Image,
+  FileSpreadsheet,
+  Trash
 } from 'lucide-react'
 
 interface DashboardStats {
@@ -294,6 +299,8 @@ export default function DashboardLayout() {
     message: '',
     senderName: 'Happy Teeth Support Services'
   })
+  const [emailAttachments, setEmailAttachments] = useState<File[]>([])
+  const [isDragOver, setIsDragOver] = useState(false)
 
   // Lead Generation State
   const [scrapedLeads, setScrapedLeads] = useState<DentalClinicLead[]>([])
@@ -436,6 +443,77 @@ export default function DashboardLayout() {
     return contacts.filter(c => selectedContacts.has(c.id))
   }
 
+  // File Attachment Functions
+  const handleFileUpload = (files: FileList | null) => {
+    if (!files) return
+
+    const validFiles: File[] = []
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    const allowedTypes = [
+      'application/pdf',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/plain'
+    ]
+
+    Array.from(files).forEach(file => {
+      if (file.size > maxSize) {
+        alert(`File ${file.name} is too large. Maximum size is 10MB.`)
+        return
+      }
+
+      if (!allowedTypes.includes(file.type)) {
+        alert(`File ${file.name} is not supported. Please use PDF, Word, Excel, images, or text files.`)
+        return
+      }
+
+      validFiles.push(file)
+    })
+
+    setEmailAttachments(prev => [...prev, ...validFiles])
+  }
+
+  const handleRemoveAttachment = (index: number) => {
+    setEmailAttachments(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    handleFileUpload(e.dataTransfer.files)
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const getFileIcon = (fileType: string) => {
+    if (fileType.includes('pdf')) return <FileText className="w-4 h-4 text-red-500" />
+    if (fileType.includes('image')) return <Image className="w-4 h-4 text-blue-500" />
+    if (fileType.includes('spreadsheet') || fileType.includes('excel')) return <FileSpreadsheet className="w-4 h-4 text-green-500" />
+    return <FileText className="w-4 h-4 text-gray-500" />
+  }
+
   // Email Blast Functions
   const handleOpenEmailComposer = () => {
     if (selectedContacts.size === 0) {
@@ -476,6 +554,7 @@ export default function DashboardLayout() {
           message: '',
           senderName: 'Happy Teeth Support Services'
         })
+        setEmailAttachments([])
         setSelectedContacts(new Set())
       } else {
         const error = await response.text()
@@ -864,15 +943,6 @@ export default function DashboardLayout() {
                   </p>
                 </div>
                 <div className="flex space-x-3">
-                  {selectedContacts.size > 0 && (
-                    <button
-                      onClick={handleOpenEmailComposer}
-                      className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                    >
-                      <Send size={20} className="mr-2" />
-                      Email Blast ({selectedContacts.size})
-                    </button>
-                  )}
                   <label className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer">
                     <Upload size={20} className="mr-2" />
                     Upload CSV
@@ -1354,6 +1424,72 @@ export default function DashboardLayout() {
                   placeholder="Your email message..."
                 />
               </div>
+
+              {/* File Attachments Section */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Paperclip size={16} className="inline mr-1" />
+                  Attachments
+                </label>
+
+                {/* Drag and Drop Area */}
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                    isDragOver
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Drop files here</span> or{' '}
+                      <label className="text-blue-600 hover:text-blue-700 cursor-pointer">
+                        browse to upload
+                        <input
+                          type="file"
+                          multiple
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif"
+                          onChange={(e) => handleFileUpload(e.target.files)}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      PDF, Word, Excel, Images, Text files up to 10MB each
+                    </p>
+                  </div>
+                </div>
+
+                {/* Attached Files List */}
+                {emailAttachments.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <h5 className="text-sm font-medium text-gray-700">Attached Files:</h5>
+                    {emailAttachments.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                        <div className="flex items-center space-x-3">
+                          {getFileIcon(file.type)}
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                            <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveAttachment(index)}
+                          className="text-red-500 hover:text-red-700 p-1"
+                          title="Remove attachment"
+                        >
+                          <Trash size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="bg-blue-50 p-4 rounded-md">
                 <h4 className="text-sm font-medium text-blue-900 mb-2">Email Template Variables:</h4>
                 <div className="text-xs text-blue-700 space-y-1">
@@ -1366,7 +1502,10 @@ export default function DashboardLayout() {
             </div>
             <div className="p-6 border-t flex justify-end space-x-3">
               <button
-                onClick={() => setShowEmailComposer(false)}
+                onClick={() => {
+                  setShowEmailComposer(false)
+                  setEmailAttachments([])
+                }}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
                 disabled={sendingEmail}
               >
@@ -1511,6 +1650,26 @@ export default function DashboardLayout() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Floating Email Blast Button */}
+      {selectedContacts.size > 0 && activeTab === 'email-contacts' && (
+        <div className="fixed bottom-6 right-6 z-30">
+          <button
+            onClick={handleOpenEmailComposer}
+            className="flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 border border-green-500"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <Send size={20} />
+                <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                  {selectedContacts.size}
+                </div>
+              </div>
+              <span className="font-medium">Email Blast</span>
+            </div>
+          </button>
         </div>
       )}
 

@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
       message: 'Email configuration test completed',
       results,
       credentials: {
-        email: process.env.OUTLOOK_EMAIL || 'support@happyteethsupportservices.com',
-        passwordSet: !!(process.env.OUTLOOK_PASSWORD || 'Robes2013$')
+        email: process.env.OUTLOOK_EMAIL || 'Not configured',
+        passwordSet: !!process.env.OUTLOOK_PASSWORD
       }
     })
 
@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
         error: 'Test failed',
         details: error instanceof Error ? error.message : 'Unknown error',
         credentials: {
-          email: process.env.OUTLOOK_EMAIL || 'support@happyteethsupportservices.com',
-          passwordSet: !!(process.env.OUTLOOK_PASSWORD || 'Robes2013$')
+          email: process.env.OUTLOOK_EMAIL || 'Not configured',
+          passwordSet: !!process.env.OUTLOOK_PASSWORD
         }
       },
       { status: 500 }

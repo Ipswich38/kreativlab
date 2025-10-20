@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import {
   Phone,
   Users,
@@ -27,7 +27,10 @@ import {
   FileText,
   Image,
   FileSpreadsheet,
-  Trash
+  Trash,
+  Settings,
+  Check,
+  AlertTriangle
 } from 'lucide-react'
 
 interface DashboardStats {
@@ -73,6 +76,12 @@ interface DentalClinicLead {
   lastUpdated: string
 }
 
+interface EmailConfig {
+  provider: 'gmail' | 'outlook' | 'smtp'
+  email: string
+  senderName: string
+  isActive: boolean
+}
 
 const recentMarketingActivity = [
   { id: 1, type: 'email', description: 'Email blast sent to 25 dental practices - "Administrative Support Services"', time: '30 mins ago', status: 'completed' },
@@ -302,6 +311,11 @@ export default function DashboardLayout() {
   const [emailAttachments, setEmailAttachments] = useState<File[]>([])
   const [isDragOver, setIsDragOver] = useState(false)
 
+  // Email Configuration State
+  const [emailConfig, setEmailConfig] = useState<EmailConfig | null>(null)
+  const [testingEmail, setTestingEmail] = useState(false)
+  const [testEmail, setTestEmail] = useState('')
+
   // Lead Generation State
   const [scrapedLeads, setScrapedLeads] = useState<DentalClinicLead[]>([])
   const [isScrapingLoading, setIsScrapingLoading] = useState(false)
@@ -514,6 +528,50 @@ export default function DashboardLayout() {
     return <FileText className="w-4 h-4 text-gray-500" />
   }
 
+  // Email Configuration Functions
+  const fetchEmailConfig = async () => {
+    try {
+      const response = await fetch('/api/email-config')
+      const data = await response.json()
+      if (data.success) {
+        setEmailConfig(data.config)
+      }
+    } catch (error) {
+      console.error('Failed to fetch email config:', error)
+    }
+  }
+
+  const handleTestEmail = async () => {
+    if (!testEmail) {
+      alert('Please enter an email address to test')
+      return
+    }
+
+    setTestingEmail(true)
+    try {
+      const response = await fetch('/api/email-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testEmail })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        alert(`✅ Test email sent successfully via ${data.provider.toUpperCase()}!`)
+      } else {
+        alert(`❌ Test failed: ${data.error}`)
+      }
+    } catch (error) {
+      alert(`❌ Test failed: ${error}`)
+    }
+    setTestingEmail(false)
+  }
+
+  // Load email config on component mount
+  React.useEffect(() => {
+    fetchEmailConfig()
+  }, [])
+
   // Email Blast Functions
   const handleOpenEmailComposer = () => {
     if (selectedContacts.size === 0) {
@@ -700,6 +758,13 @@ export default function DashboardLayout() {
             <Search size={20} className="mr-3" />
             Lead Generation
           </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex items-center w-full px-6 py-3 text-left ${activeTab === 'settings' ? 'text-gray-700 bg-blue-50 border-r-4 border-blue-500' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
+            <Settings size={20} className="mr-3" />
+            Settings
+          </button>
         </nav>
 
         <div className="absolute bottom-0 w-full p-6 border-t">
@@ -709,7 +774,7 @@ export default function DashboardLayout() {
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-700">Happy Teeth Support</p>
-              <p className="text-xs text-gray-500">htsscrm</p>
+              <p className="text-xs text-gray-500">Administrator</p>
             </div>
           </div>
           <button
@@ -746,11 +811,13 @@ export default function DashboardLayout() {
                     {activeTab === 'dashboard' && 'Dashboard Overview'}
                     {activeTab === 'email-contacts' && 'Email Marketing Hub'}
                     {activeTab === 'lead-generation' && 'Lead Generation Portal'}
+                    {activeTab === 'settings' && 'Email Configuration'}
                   </h2>
                   <p className="text-xs text-blue-600 font-medium">
                     {activeTab === 'dashboard' && 'Monitor your administrative support metrics'}
                     {activeTab === 'email-contacts' && 'Manage dental practice contacts & campaigns'}
                     {activeTab === 'lead-generation' && 'Find dental clinics needing admin support'}
+                    {activeTab === 'settings' && 'Configure email providers and test settings'}
                   </p>
                 </div>
               </div>
@@ -1364,7 +1431,147 @@ export default function DashboardLayout() {
             </div>
           )}
 
-          {activeTab !== 'dashboard' && activeTab !== 'email-contacts' && activeTab !== 'lead-generation' && (
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              {/* Email Configuration Status */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Email Provider Configuration</h3>
+                    <p className="text-sm text-gray-600">
+                      Configure your email provider for sending campaigns
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {emailConfig?.isActive ? (
+                      <div className="flex items-center text-green-600">
+                        <Check size={16} className="mr-1" />
+                        <span className="text-sm font-medium">
+                          {emailConfig.provider.toUpperCase()} Connected
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-red-600">
+                        <AlertTriangle size={16} className="mr-1" />
+                        <span className="text-sm font-medium">Not Configured</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Current Configuration Display */}
+                {emailConfig && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-medium text-gray-900 mb-2">Current Provider</h4>
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-gray-600">Provider:</span>
+                          <span className="ml-2 font-medium text-gray-900">
+                            {emailConfig.provider.toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Email:</span>
+                          <span className="ml-2 font-medium text-gray-900">
+                            {emailConfig.email}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Sender Name:</span>
+                          <span className="ml-2 font-medium text-gray-900">
+                            {emailConfig.senderName}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Status:</span>
+                          <span className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            emailConfig.isActive
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {emailConfig.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-medium text-gray-900 mb-2">Test Email Configuration</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Test Email Address
+                          </label>
+                          <input
+                            type="email"
+                            value={testEmail}
+                            onChange={(e) => setTestEmail(e.target.value)}
+                            placeholder="test@example.com"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <button
+                          onClick={handleTestEmail}
+                          disabled={testingEmail || !testEmail}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        >
+                          {testingEmail ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Testing...
+                            </>
+                          ) : (
+                            <>
+                              <Send size={16} className="mr-2" />
+                              Send Test Email
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Configuration Instructions */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-900 mb-2">Configuration Instructions</h4>
+                  <div className="text-sm text-blue-800 space-y-2">
+                    <p>
+                      Email providers are configured via environment variables in your .env file:
+                    </p>
+                    <div className="bg-white rounded border p-3 font-mono text-xs space-y-1">
+                      <div><strong>EMAIL_PROVIDER=</strong> gmail | outlook | smtp</div>
+                      <div><strong>For Gmail:</strong></div>
+                      <div className="ml-4">GMAIL_EMAIL=your-email@gmail.com</div>
+                      <div className="ml-4">GMAIL_APP_PASSWORD=your-app-password</div>
+                      <div className="ml-4">GMAIL_SENDER_NAME="Your Name"</div>
+                      <div><strong>For Outlook:</strong></div>
+                      <div className="ml-4">OUTLOOK_EMAIL=your-email@outlook.com</div>
+                      <div className="ml-4">OUTLOOK_PASSWORD=your-password</div>
+                      <div className="ml-4">OUTLOOK_SENDER_NAME="Your Name"</div>
+                      <div><strong>For SMTP:</strong></div>
+                      <div className="ml-4">SMTP_EMAIL=your-email@domain.com</div>
+                      <div className="ml-4">SMTP_PASSWORD=your-password</div>
+                      <div className="ml-4">SMTP_HOST=smtp.domain.com</div>
+                      <div className="ml-4">SMTP_PORT=587</div>
+                      <div className="ml-4">SMTP_SECURE=false</div>
+                      <div className="ml-4">SMTP_SENDER_NAME="Your Name"</div>
+                    </div>
+                    <p className="mt-2">
+                      <strong>Note:</strong> For Gmail, you'll need to generate an App Password in your
+                      Google Account settings under Security → 2-Step Verification → App passwords.
+                    </p>
+                    <p>
+                      Restart your application after making changes to environment variables.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab !== 'dashboard' && activeTab !== 'email-contacts' && activeTab !== 'lead-generation' && activeTab !== 'settings' && (
             <div className="text-center py-12">
               <div className="text-gray-400">
                 <div className="text-lg font-medium">Coming Soon</div>

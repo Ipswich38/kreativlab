@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer'
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
+import { EmailConfig } from '../email-config/route'
 
 interface EmailContact {
   id: string
@@ -30,6 +31,93 @@ function replaceTemplateVariables(template: string, contact: EmailContact): stri
     .replace(/\{\{email\}\}/g, contact.email)
 }
 
+// Get email configuration based on environment variables
+function getEmailConfig(): EmailConfig {
+  const provider = (process.env.EMAIL_PROVIDER as 'gmail' | 'outlook' | 'smtp') || 'outlook'
+
+  switch (provider) {
+    case 'gmail':
+      return {
+        provider: 'gmail',
+        email: process.env.GMAIL_EMAIL || '',
+        appPassword: process.env.GMAIL_APP_PASSWORD || '',
+        senderName: process.env.GMAIL_SENDER_NAME || 'Happy Teeth Support Services',
+        isActive: !!(process.env.GMAIL_EMAIL && process.env.GMAIL_APP_PASSWORD)
+      }
+
+    case 'outlook':
+      return {
+        provider: 'outlook',
+        email: process.env.OUTLOOK_EMAIL || '',
+        password: process.env.OUTLOOK_PASSWORD || '',
+        senderName: process.env.OUTLOOK_SENDER_NAME || 'Happy Teeth Support Services',
+        isActive: !!(process.env.OUTLOOK_EMAIL && process.env.OUTLOOK_PASSWORD)
+      }
+
+    case 'smtp':
+      return {
+        provider: 'smtp',
+        email: process.env.SMTP_EMAIL || '',
+        password: process.env.SMTP_PASSWORD || '',
+        host: process.env.SMTP_HOST || '',
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: process.env.SMTP_SECURE === 'true',
+        senderName: process.env.SMTP_SENDER_NAME || 'Happy Teeth Support Services',
+        isActive: !!(process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD && process.env.SMTP_HOST)
+      }
+
+    default:
+      return {
+        provider: 'outlook',
+        email: '',
+        senderName: 'Happy Teeth Support Services',
+        isActive: false
+      }
+  }
+}
+
+// Create email transporter based on configuration
+function createEmailTransporter(config: EmailConfig) {
+  switch (config.provider) {
+    case 'gmail':
+      return nodemailer.createTransporter({
+        service: 'gmail',
+        auth: {
+          user: config.email,
+          pass: config.appPassword
+        }
+      })
+
+    case 'outlook':
+      return nodemailer.createTransporter({
+        host: 'smtp-mail.outlook.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: config.email,
+          pass: config.password
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      })
+
+    case 'smtp':
+      return nodemailer.createTransporter({
+        host: config.host,
+        port: config.port,
+        secure: config.secure,
+        auth: {
+          user: config.email,
+          pass: config.password
+        }
+      })
+
+    default:
+      throw new Error('Invalid email provider configuration')
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { contacts, subject, message, senderName }: EmailRequest = await request.json()
@@ -43,10 +131,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Subject and message are required' }, { status: 400 })
     }
 
+    // Get email configuration
+    const emailConfig = getEmailConfig()
+
+    if (!emailConfig.isActive) {
+      return NextResponse.json({
+        error: 'No email provider is configured. Please configure an email provider in settings.'
+      }, { status: 400 })
+    }
+
+    console.log(`Using ${emailConfig.provider.toUpperCase()} email service...`)
+
     const results = []
     const errors = []
 
-    // Try Resend first (more reliable for production)
+    // Try Resend first if configured
     if (process.env.RESEND_API_KEY) {
       console.log('Using Resend email service...')
       const resend = new Resend(process.env.RESEND_API_KEY)
@@ -55,13 +154,12 @@ export async function POST(request: NextRequest) {
         try {
           console.log(`Sending email via Resend to: ${contact.email}`)
 
-          // Replace template variables
           const personalizedMessage = replaceTemplateVariables(message, contact)
           const personalizedSubject = replaceTemplateVariables(subject, contact)
           const htmlMessage = personalizedMessage.replace(/\n/g, '<br>')
 
           const { data, error } = await resend.emails.send({
-            from: `${senderName} <onboarding@resend.dev>`, // Resend default domain
+            from: `${emailConfig.senderName} <onboarding@resend.dev>`,
             to: [contact.email],
             subject: personalizedSubject,
             html: `
@@ -70,7 +168,7 @@ export async function POST(request: NextRequest) {
                 <br><br>
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
                   <p>Best regards,<br>
-                  <strong>${senderName}</strong><br>
+                  <strong>${emailConfig.senderName}</strong><br>
                   Happy Teeth Support Services<br>
                   Professional Dental Administrative Support</p>
                 </div>
@@ -92,7 +190,6 @@ export async function POST(request: NextRequest) {
             service: 'resend'
           })
 
-          // Small delay between emails
           await new Promise(resolve => setTimeout(resolve, 100))
 
         } catch (error) {
@@ -105,62 +202,19 @@ export async function POST(request: NextRequest) {
         }
       }
     } else {
-      // Use Gmail SMTP as primary fallback
-      console.log('Resend not configured, using Gmail SMTP...')
-
-      let transporter;
-
-      // Try Gmail first (more reliable)
-      if (process.env.GMAIL_EMAIL && process.env.GMAIL_APP_PASSWORD) {
-        console.log('Using Gmail SMTP configuration...')
-        transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: process.env.GMAIL_EMAIL,
-            pass: process.env.GMAIL_APP_PASSWORD
-          }
-        });
-      } else {
-        console.log('Gmail not configured, falling back to Outlook...')
-        try {
-          transporter = nodemailer.createTransport({
-            service: 'hotmail',
-            auth: {
-              user: process.env.OUTLOOK_EMAIL || 'support@happyteethsupportservices.com',
-              pass: process.env.OUTLOOK_PASSWORD || 'Robes2013$'
-            }
-          });
-        } catch (error) {
-          console.log('Hotmail service failed, trying manual config...');
-          transporter = nodemailer.createTransport({
-            host: 'smtp-mail.outlook.com',
-            port: 587,
-            secure: false,
-            auth: {
-              user: process.env.OUTLOOK_EMAIL || 'support@happyteethsupportservices.com',
-              pass: process.env.OUTLOOK_PASSWORD || 'Robes2013$'
-            },
-            tls: {
-              rejectUnauthorized: false,
-              minVersion: 'TLSv1'
-            },
-            ignoreTLS: false,
-            requireTLS: true
-          });
-        }
-      }
+      // Use configured SMTP provider
+      const transporter = createEmailTransporter(emailConfig)
 
       for (const contact of contacts) {
         try {
-          console.log(`Attempting SMTP send to: ${contact.email}`)
+          console.log(`Sending via ${emailConfig.provider.toUpperCase()} to: ${contact.email}`)
 
           const personalizedMessage = replaceTemplateVariables(message, contact)
           const personalizedSubject = replaceTemplateVariables(subject, contact)
           const htmlMessage = personalizedMessage.replace(/\n/g, '<br>')
 
-          const fromEmail = process.env.GMAIL_EMAIL || process.env.OUTLOOK_EMAIL || 'support@happyteethsupportservices.com';
           const mailOptions = {
-            from: `"${senderName}" <${fromEmail}>`,
+            from: `"${emailConfig.senderName}" <${emailConfig.email}>`,
             to: contact.email,
             subject: personalizedSubject,
             text: personalizedMessage,
@@ -170,7 +224,7 @@ export async function POST(request: NextRequest) {
                 <br><br>
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
                   <p>Best regards,<br>
-                  <strong>${senderName}</strong><br>
+                  <strong>${emailConfig.senderName}</strong><br>
                   Happy Teeth Support Services<br>
                   Professional Dental Administrative Support</p>
                 </div>
@@ -179,20 +233,20 @@ export async function POST(request: NextRequest) {
           }
 
           const info = await transporter.sendMail(mailOptions)
-          console.log(`SMTP email sent to ${contact.email}:`, info.messageId)
+          console.log(`${emailConfig.provider.toUpperCase()} email sent to ${contact.email}:`, info.messageId)
 
           results.push({
             contact: `${contact.firstName} ${contact.lastName}`,
             email: contact.email,
             status: 'sent',
             messageId: info.messageId,
-            service: 'smtp'
+            service: emailConfig.provider
           })
 
           await new Promise(resolve => setTimeout(resolve, 100))
 
         } catch (error) {
-          console.error(`SMTP failed for ${contact.email}:`, error)
+          console.error(`${emailConfig.provider.toUpperCase()} failed for ${contact.email}:`, error)
           errors.push({
             contact: `${contact.firstName} ${contact.lastName}`,
             email: contact.email,
@@ -201,14 +255,13 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      if (transporter) {
-        transporter.close()
-      }
+      transporter.close()
     }
 
     return NextResponse.json({
       success: true,
-      message: `Email blast completed. ${results.length} emails sent successfully.`,
+      message: `Email blast completed using ${emailConfig.provider.toUpperCase()}. ${results.length} emails sent successfully.`,
+      provider: emailConfig.provider,
       results,
       errors: errors.length > 0 ? errors : undefined
     })

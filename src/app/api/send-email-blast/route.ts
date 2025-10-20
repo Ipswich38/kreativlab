@@ -120,7 +120,7 @@ function createEmailTransporter(config: EmailConfig) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { contacts, subject, message, senderName }: EmailRequest = await request.json()
+    const { contacts, subject, message }: EmailRequest = await request.json()
 
     // Validate request
     if (!contacts || contacts.length === 0) {

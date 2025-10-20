@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import nodemailer from 'nodemailer'
 
 export interface EmailConfig {
   provider: 'gmail' | 'outlook' | 'smtp'
@@ -103,7 +104,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Test email sending
-    const nodemailer = require('nodemailer')
     let transporter
 
     switch (config.provider) {

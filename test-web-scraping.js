@@ -5,7 +5,7 @@ async function testWebScraping() {
 
   try {
     // Test the API endpoint
-    const response = await axios.post('http://localhost:3000/api/scrape-dental-clinics', {
+    const response = await axios.post('http://localhost:3002/api/scrape-dental-clinics', {
       location: {
         zipCode: '90210',
         city: 'Beverly Hills',
@@ -53,7 +53,7 @@ async function testWebScraping() {
 async function testGetEndpoint() {
   try {
     console.log('🔍 Testing GET endpoint...');
-    const response = await axios.get('http://localhost:3000/api/scrape-dental-clinics');
+    const response = await axios.get('http://localhost:3002/api/scrape-dental-clinics');
     console.log('✅ GET Response:', response.data);
   } catch (error) {
     console.error('❌ GET Test failed:', error.message);

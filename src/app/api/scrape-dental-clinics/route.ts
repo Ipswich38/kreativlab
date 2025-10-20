@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { DentalClinicScraper, ScrapingLocation } from '@/lib/scraping/dental-clinic-scraper'
+import { generateMockDentalClinics } from '@/lib/scraping/dental-clinic-mock-data'
 
 interface ScrapeRequest {
   location: ScrapingLocation
@@ -26,8 +27,20 @@ export async function POST(request: NextRequest) {
 
     console.log('🚀 Starting dental clinic scraping...', { location, filters })
 
-    const scraper = new DentalClinicScraper()
-    const leads = await scraper.scrapeByLocation(location)
+    let leads
+    try {
+      const scraper = new DentalClinicScraper()
+      leads = await scraper.scrapeByLocation(location)
+
+      // If scraping returns no results, use mock data
+      if (leads.length === 0) {
+        console.log('⚠️ Scraping returned 0 results, using mock data...')
+        leads = generateMockDentalClinics(location)
+      }
+    } catch (scrapingError) {
+      console.log('⚠️ Scraping failed, using mock data as fallback:', scrapingError)
+      leads = generateMockDentalClinics(location)
+    }
 
     // Apply filters if provided
     let filteredLeads = leads

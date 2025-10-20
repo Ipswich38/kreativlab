@@ -3,11 +3,7 @@
 import { useState } from 'react'
 import {
   Phone,
-  Ticket,
-  Building2,
-  DollarSign,
   Users,
-  Calendar,
   AlertCircle,
   CheckCircle,
   Clock,
@@ -20,7 +16,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  Download,
   Send,
   CheckSquare,
   Square,
@@ -583,8 +578,16 @@ export default function DashboardLayout() {
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative lg:z-0`}>
-        <div className="flex items-center justify-between h-16 px-6 border-b">
-          <h1 className="text-xl font-bold text-blue-600">KreativLab CRM</h1>
+        <div className="flex items-center justify-between h-16 px-6 border-b bg-gradient-to-r from-blue-600 to-blue-700">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+              <span className="text-blue-600 font-bold text-sm">HT</span>
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-white">Happy Teeth CRM</h1>
+              <p className="text-blue-100 text-xs">Administrative Support Services</p>
+            </div>
+          </div>
           <button
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden"
@@ -646,26 +649,43 @@ export default function DashboardLayout() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Navigation */}
-        <div className="bg-white shadow-sm border-b">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm border-b border-blue-200">
           <div className="flex items-center justify-between h-16 px-6">
             <div className="flex items-center">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden mr-4"
+                className="lg:hidden mr-4 text-blue-600 hover:text-blue-800"
               >
                 <Menu size={24} />
               </button>
-              <h2 className="text-xl font-semibold text-gray-800">
-                {activeTab === 'dashboard' && 'Dashboard'}
-                {activeTab === 'email-contacts' && 'Email Contacts'}
-                {activeTab === 'lead-generation' && 'Lead Generation'}
-              </h2>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+                  <span className="text-white font-bold text-sm">HT</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">
+                    {activeTab === 'dashboard' && 'Dashboard Overview'}
+                    {activeTab === 'email-contacts' && 'Email Marketing Hub'}
+                    {activeTab === 'lead-generation' && 'Lead Generation Portal'}
+                  </h2>
+                  <p className="text-xs text-blue-600 font-medium">
+                    {activeTab === 'dashboard' && 'Monitor your administrative support metrics'}
+                    {activeTab === 'email-contacts' && 'Manage dental practice contacts & campaigns'}
+                    {activeTab === 'lead-generation' && 'Find dental clinics needing admin support'}
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-600">
-                Welcome back, Happy Teeth Support Services
+              <div className="bg-white rounded-lg px-4 py-2 shadow-sm border border-blue-200">
+                <div className="text-sm font-medium text-gray-700">
+                  Happy Teeth Support Services
+                </div>
+                <div className="text-xs text-blue-600">
+                  Administrative Excellence Team
+                </div>
               </div>
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-blue-200">
                 HT
               </div>
             </div>
@@ -673,70 +693,70 @@ export default function DashboardLayout() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-gray-50 to-blue-50">
           {activeTab === 'dashboard' && (
             <>
               {/* Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg border border-blue-100 p-6 hover:shadow-xl transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Contacts</p>
-                  <p className="text-2xl font-bold text-gray-900">{emailStats.totalCalls}</p>
+                  <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Contacts</p>
+                  <p className="text-3xl font-bold text-gray-900">{emailStats.totalCalls}</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-blue-600" />
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Users className="w-7 h-7 text-white" />
                 </div>
               </div>
               <div className="mt-4 flex items-center">
                 <TrendingUp className="w-4 h-4 text-green-500" />
-                <span className="text-sm text-green-600 ml-1">Ready for campaigns</span>
+                <span className="text-sm text-green-600 ml-1 font-medium">Ready for campaigns</span>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-gradient-to-br from-white to-green-50 rounded-xl shadow-lg border border-green-100 p-6 hover:shadow-xl transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Active Contacts</p>
-                  <p className="text-2xl font-bold text-gray-900">{emailStats.totalTickets}</p>
+                  <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Active Contacts</p>
+                  <p className="text-3xl font-bold text-gray-900">{emailStats.totalTickets}</p>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
+                <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <CheckCircle className="w-7 h-7 text-white" />
                 </div>
               </div>
               <div className="mt-4">
-                <span className="text-sm text-gray-600">With valid email addresses</span>
+                <span className="text-sm text-gray-600 font-medium">With valid email addresses</span>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl shadow-lg border border-orange-100 p-6 hover:shadow-xl transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Hot Leads</p>
-                  <p className="text-2xl font-bold text-gray-900">{emailStats.openTickets}</p>
+                  <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Hot Leads</p>
+                  <p className="text-3xl font-bold text-gray-900">{emailStats.openTickets}</p>
                 </div>
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-red-600" />
+                <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Target className="w-7 h-7 text-white" />
                 </div>
               </div>
               <div className="mt-4">
-                <span className="text-sm text-red-600">Need admin support</span>
+                <span className="text-sm text-orange-600 font-medium">Need admin support</span>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-gradient-to-br from-white to-yellow-50 rounded-xl shadow-lg border border-yellow-100 p-6 hover:shadow-xl transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Need Follow-up</p>
-                  <p className="text-2xl font-bold text-gray-900">{emailStats.recentCalls}</p>
+                  <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Need Follow-up</p>
+                  <p className="text-3xl font-bold text-gray-900">{emailStats.recentCalls}</p>
                 </div>
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-yellow-600" />
+                <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Clock className="w-7 h-7 text-white" />
                 </div>
               </div>
               <div className="mt-4 flex items-center">
                 <AlertCircle className="w-4 h-4 text-yellow-500" />
-                <span className="text-sm text-yellow-600 ml-1">Missing email addresses</span>
+                <span className="text-sm text-yellow-600 ml-1 font-medium">Missing email addresses</span>
               </div>
             </div>
           </div>
@@ -1020,7 +1040,7 @@ export default function DashboardLayout() {
                       value={scrapingLocation.zipCode}
                       onChange={(e) => setScrapingLocation(prev => ({ ...prev, zipCode: e.target.value }))}
                       placeholder="e.g., 90210"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
                     />
                   </div>
                   <div>
@@ -1032,7 +1052,7 @@ export default function DashboardLayout() {
                       value={scrapingLocation.city}
                       onChange={(e) => setScrapingLocation(prev => ({ ...prev, city: e.target.value }))}
                       placeholder="e.g., Beverly Hills"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
                     />
                   </div>
                   <div>
@@ -1044,7 +1064,7 @@ export default function DashboardLayout() {
                       value={scrapingLocation.state}
                       onChange={(e) => setScrapingLocation(prev => ({ ...prev, state: e.target.value }))}
                       placeholder="e.g., CA"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
                     />
                   </div>
                 </div>

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { DentalClinicScraper, ScrapingLocation } from '@/lib/scraping/dental-clinic-scraper'
+import { DentalClinicScraper, ScrapingLocation, DentalClinicLead } from '@/lib/scraping/dental-clinic-scraper'
+import { GooglePlacesScraper } from '@/lib/scraping/google-places-scraper'
+import { OpenStreetMapScraper } from '@/lib/scraping/openstreetmap-scraper'
+import { FoursquareScraper } from '@/lib/scraping/foursquare-scraper'
 import { generateMockDentalClinics } from '@/lib/scraping/dental-clinic-mock-data'
 
 interface ScrapeRequest {
@@ -10,6 +13,67 @@ interface ScrapeRequest {
     hasWebsite?: boolean
     hasEmail?: boolean
     hasPhone?: boolean
+  }
+}
+
+// Deduplication and data merging function
+function deduplicateAndMergeLeads(leads: DentalClinicLead[]): DentalClinicLead[] {
+  const uniqueLeads = new Map<string, DentalClinicLead>()
+
+  for (const lead of leads) {
+    // Create a key based on name and approximate location
+    const key = generateDeduplicationKey(lead)
+
+    if (uniqueLeads.has(key)) {
+      // Merge with existing lead
+      const existing = uniqueLeads.get(key)!
+      const merged = mergeLeadData(existing, lead)
+      uniqueLeads.set(key, merged)
+    } else {
+      uniqueLeads.set(key, lead)
+    }
+  }
+
+  return Array.from(uniqueLeads.values())
+}
+
+function generateDeduplicationKey(lead: DentalClinicLead): string {
+  // Normalize the name for comparison
+  const normalizedName = lead.name.toLowerCase()
+    .replace(/[^\w\s]/g, '') // Remove special characters
+    .replace(/\s+/g, ' ') // Normalize spaces
+    .trim()
+
+  // Use name + zip code (if available) or city as key
+  const locationKey = lead.location.zipCode || lead.location.city || ''
+
+  return `${normalizedName}|${locationKey.toLowerCase()}`
+}
+
+function mergeLeadData(existing: DentalClinicLead, newLead: DentalClinicLead): DentalClinicLead {
+  return {
+    ...existing,
+    // Keep the most complete address
+    address: existing.address.length > newLead.address.length ? existing.address : newLead.address,
+    // Prefer non-empty contact info
+    phone: existing.phone || newLead.phone,
+    email: existing.email || newLead.email,
+    website: existing.website || newLead.website,
+    contactPerson: existing.contactPerson || newLead.contactPerson,
+    // Merge specialties and remove duplicates
+    specialties: [...new Set([...existing.specialties, ...newLead.specialties])],
+    // Merge needs indicators and remove duplicates
+    needsIndicators: [...new Set([...existing.needsIndicators, ...newLead.needsIndicators])],
+    // Use the source URL from the richer data source
+    sourceUrl: existing.sourceUrl.includes('google') ? existing.sourceUrl : newLead.sourceUrl,
+    // Use the most complete location data
+    location: {
+      zipCode: existing.location.zipCode || newLead.location.zipCode,
+      city: existing.location.city || newLead.location.city,
+      state: existing.location.state || newLead.location.state
+    },
+    // Update timestamp
+    lastUpdated: new Date().toISOString()
   }
 }
 
@@ -25,21 +89,82 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('🚀 Starting dental clinic scraping...', { location, filters })
+    console.log('🚀 Starting multi-source dental clinic data aggregation...', { location, filters })
 
-    let leads
+    let leads: DentalClinicLead[] = []
+    const sources: string[] = []
+
     try {
-      const scraper = new DentalClinicScraper()
-      leads = await scraper.scrapeByLocation(location)
+      // Multi-source data aggregation - try all available sources
+      const allResults = await Promise.allSettled([
+        // 1. Google Places API (most reliable, requires API key)
+        (async () => {
+          const googleApiKey = process.env.GOOGLE_PLACES_API_KEY
+          if (googleApiKey && googleApiKey !== 'your_google_places_api_key') {
+            console.log('🔍 Fetching from Google Places API...')
+            const googleScraper = new GooglePlacesScraper(googleApiKey)
+            const results = await googleScraper.scrapeByLocation(location)
+            if (results.length > 0) sources.push('Google Places')
+            return results
+          }
+          return []
+        })(),
 
-      // If scraping returns no results, use mock data
-      if (leads.length === 0) {
-        console.log('⚠️ Scraping returned 0 results, using mock data...')
-        leads = generateMockDentalClinics(location)
+        // 2. OpenStreetMap Overpass API (completely free)
+        (async () => {
+          console.log('🗺️ Fetching from OpenStreetMap...')
+          const osmScraper = new OpenStreetMapScraper()
+          const results = await osmScraper.scrapeByLocation(location)
+          if (results.length > 0) sources.push('OpenStreetMap')
+          return results
+        })(),
+
+        // 3. Foursquare Places API (free tier available)
+        (async () => {
+          const foursquareApiKey = process.env.FOURSQUARE_API_KEY
+          if (foursquareApiKey && foursquareApiKey !== 'your_foursquare_api_key') {
+            console.log('🏢 Fetching from Foursquare Places...')
+            const foursquareScraper = new FoursquareScraper(foursquareApiKey)
+            const results = await foursquareScraper.scrapeByLocation(location)
+            if (results.length > 0) sources.push('Foursquare')
+            return results
+          }
+          return []
+        })(),
+
+        // 4. Traditional web scraping (backup method)
+        (async () => {
+          console.log('🔍 Attempting traditional web scraping...')
+          const scraper = new DentalClinicScraper()
+          const results = await scraper.scrapeByLocation(location)
+          if (results.length > 0) sources.push('Web Scraping')
+          return results
+        })()
+      ])
+
+      // Collect results from all sources
+      for (const result of allResults) {
+        if (result.status === 'fulfilled' && result.value.length > 0) {
+          leads.push(...result.value)
+        }
       }
+
+      // Deduplicate and merge results
+      leads = deduplicateAndMergeLeads(leads)
+
+      // If no results from any source, use mock data
+      if (leads.length === 0) {
+        console.log('⚠️ All data sources returned 0 results, using mock data...')
+        leads = generateMockDentalClinics(location)
+        sources.push('Mock Data')
+      }
+
+      console.log(`📊 Data aggregation completed: ${leads.length} unique leads from sources: ${sources.join(', ')}`)
+
     } catch (scrapingError) {
-      console.log('⚠️ Scraping failed, using mock data as fallback:', scrapingError)
+      console.log('⚠️ Data aggregation failed, using mock data as fallback:', scrapingError)
       leads = generateMockDentalClinics(location)
+      sources.push('Mock Data (Fallback)')
     }
 
     // Apply filters if provided

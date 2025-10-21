@@ -80,7 +80,7 @@ function getEmailConfig(): EmailConfig {
 function createEmailTransporter(config: EmailConfig) {
   switch (config.provider) {
     case 'gmail':
-      return nodemailer.createTransporter({
+      return nodemailer.createTransport({
         service: 'gmail',
         auth: {
           user: config.email,
@@ -89,7 +89,7 @@ function createEmailTransporter(config: EmailConfig) {
       })
 
     case 'outlook':
-      return nodemailer.createTransporter({
+      return nodemailer.createTransport({
         host: 'smtp-mail.outlook.com',
         port: 587,
         secure: false,
@@ -103,7 +103,7 @@ function createEmailTransporter(config: EmailConfig) {
       })
 
     case 'smtp':
-      return nodemailer.createTransporter({
+      return nodemailer.createTransport({
         host: config.host,
         port: config.port,
         secure: config.secure,

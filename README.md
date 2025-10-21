@@ -2,6 +2,8 @@
 
 A comprehensive SaaS CRM platform designed specifically for dental administrative support services, enabling efficient management of dental practice relationships, patient communications, and revenue cycle operations.
 
+🚀 **Latest Features**: Line2 VoIP integration, OpenStreetMap lead generation, multi-source data aggregation
+
 ## 🦷 About
 
 KreativLab is built to power dental administrative support businesses like Happy Teeth Support Services, providing a complete solution for managing:

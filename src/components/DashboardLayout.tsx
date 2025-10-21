@@ -83,23 +83,26 @@ interface EmailConfig {
   isActive: boolean
 }
 
-const recentMarketingActivity = [
-  { id: 1, type: 'email', description: 'Email blast sent to 25 dental practices - "Administrative Support Services"', time: '30 mins ago', status: 'completed' },
-  { id: 2, type: 'contact', description: 'New prospect added: Norton Family Dental', time: '1 hour ago', status: 'completed' },
-  { id: 3, type: 'email', description: 'Follow-up email campaign to hot leads', time: '2 hours ago', status: 'completed' },
-  { id: 4, type: 'contact', description: 'Contact updated: Smile On Nashville - marked as hot lead', time: '3 hours ago', status: 'completed' },
-  { id: 5, type: 'email', description: 'Email blast scheduled for dental expansion prospects', time: '4 hours ago', status: 'in_progress' },
-]
+// Production-ready: Empty recent marketing activity - will be populated with real user actions
+const recentMarketingActivity: Array<{
+  id: string;
+  type: string;
+  description: string;
+  time: string;
+  status: string;
+}> = []
 
-const emailCampaignStats = [
-  { campaign: 'Administrative Support Outreach', sent: 45, opened: 18, responded: 3, status: 'active' },
-  { campaign: 'Front Desk Coordinator Services', sent: 32, opened: 12, responded: 2, status: 'active' },
-  { campaign: 'Virtual Assistant Follow-up', sent: 28, opened: 15, responded: 5, status: 'completed' },
-  { campaign: 'Practice Expansion Support', sent: 38, opened: 22, responded: 4, status: 'active' },
-]
+// Production-ready: Empty campaign stats - will be populated with real campaign data
+const emailCampaignStats: Array<{
+  campaign: string;
+  status: string;
+  sent: number;
+  opened: number;
+  responded: number;
+}> = []
 
 // Helper function to parse name into first and last name
-function parseName(fullName: string): { firstName: string; lastName: string } {
+function _parseName(fullName: string): { firstName: string; lastName: string } {
   if (!fullName) return { firstName: '', lastName: '' }
 
   const trimmed = fullName.trim()
@@ -119,7 +122,7 @@ function parseName(fullName: string): { firstName: string; lastName: string } {
 }
 
 // Helper function to format phone number
-function formatPhone(phone: string): string {
+function _formatPhone(phone: string): string {
   if (!phone) return ''
 
   // Remove all non-digits
@@ -138,7 +141,7 @@ function formatPhone(phone: string): string {
 }
 
 // Helper function to determine tags based on company name and needs
-function generateTags(company: string, needs: string): string[] {
+function _generateTags(company: string, needs: string): string[] {
   const tags: string[] = []
 
   // Add tags based on company type
@@ -170,7 +173,7 @@ function generateTags(company: string, needs: string): string[] {
 
 // Production-ready: Start with empty contacts list
 // Users will add their own contacts or import via CSV
-const csvData = []
+const _csvData = []
 
 // Process all CSV data into contact records
 const realContacts: EmailContact[] = []
@@ -820,31 +823,39 @@ export default function DashboardLayout() {
               </div>
               <div className="p-6">
                 <div className="space-y-4">
-                  {recentMarketingActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-start space-x-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        activity.status === 'in_progress' ? 'bg-yellow-100' : 'bg-green-100'
-                      }`}>
-                        {activity.type === 'email' ? (
-                          <Mail className={`w-4 h-4 ${
-                            activity.status === 'in_progress' ? 'text-yellow-600' : 'text-green-600'
-                          }`} />
-                        ) : (
-                          <Users className={`w-4 h-4 ${
-                            activity.status === 'in_progress' ? 'text-yellow-600' : 'text-green-600'
-                          }`} />
-                        )}
+                  {recentMarketingActivity.length > 0 ? (
+                    recentMarketingActivity.map((activity) => (
+                      <div key={activity.id} className="flex items-start space-x-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          activity.status === 'in_progress' ? 'bg-yellow-100' : 'bg-green-100'
+                        }`}>
+                          {activity.type === 'email' ? (
+                            <Mail className={`w-4 h-4 ${
+                              activity.status === 'in_progress' ? 'text-yellow-600' : 'text-green-600'
+                            }`} />
+                          ) : (
+                            <Users className={`w-4 h-4 ${
+                              activity.status === 'in_progress' ? 'text-yellow-600' : 'text-green-600'
+                            }`} />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">{activity.description}</p>
+                          <p className="text-sm text-gray-500">{activity.time}</p>
+                        </div>
+                        <div className="flex-shrink-0">
+                          {activity.status === 'in_progress' && <Clock className="w-5 h-5 text-yellow-500" />}
+                          {activity.status === 'completed' && <CheckCircle className="w-5 h-5 text-green-500" />}
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{activity.description}</p>
-                        <p className="text-sm text-gray-500">{activity.time}</p>
-                      </div>
-                      <div className="flex-shrink-0">
-                        {activity.status === 'in_progress' && <Clock className="w-5 h-5 text-yellow-500" />}
-                        {activity.status === 'completed' && <CheckCircle className="w-5 h-5 text-green-500" />}
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <Users className="mx-auto h-12 w-12 text-gray-400" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No marketing campaigns yet</h3>
+                      <p className="mt-1 text-sm text-gray-500">Start your first campaign to see activity here.</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -856,41 +867,49 @@ export default function DashboardLayout() {
               </div>
               <div className="p-6">
                 <div className="space-y-4">
-                  {emailCampaignStats.map((campaign, index) => (
-                    <div key={index} className="p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm font-medium text-gray-900">{campaign.campaign}</p>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          campaign.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {campaign.status}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-4 text-center">
-                        <div>
-                          <p className="text-lg font-semibold text-gray-900">{campaign.sent}</p>
-                          <p className="text-xs text-gray-500">Sent</p>
+                  {emailCampaignStats.length > 0 ? (
+                    emailCampaignStats.map((campaign, index) => (
+                      <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm font-medium text-gray-900">{campaign.campaign}</p>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            campaign.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {campaign.status}
+                          </span>
                         </div>
-                        <div>
-                          <p className="text-lg font-semibold text-blue-600">{campaign.opened}</p>
-                          <p className="text-xs text-gray-500">Opened</p>
+                        <div className="grid grid-cols-3 gap-4 text-center">
+                          <div>
+                            <p className="text-lg font-semibold text-gray-900">{campaign.sent}</p>
+                            <p className="text-xs text-gray-500">Sent</p>
+                          </div>
+                          <div>
+                            <p className="text-lg font-semibold text-blue-600">{campaign.opened}</p>
+                            <p className="text-xs text-gray-500">Opened</p>
+                          </div>
+                          <div>
+                            <p className="text-lg font-semibold text-green-600">{campaign.responded}</p>
+                            <p className="text-xs text-gray-500">Responded</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-lg font-semibold text-green-600">{campaign.responded}</p>
-                          <p className="text-xs text-gray-500">Responded</p>
+                        <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full"
+                            style={{ width: `${(campaign.opened / campaign.sent) * 100}%` }}
+                          ></div>
                         </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {Math.round((campaign.opened / campaign.sent) * 100)}% open rate
+                        </p>
                       </div>
-                      <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full"
-                          style={{ width: `${(campaign.opened / campaign.sent) * 100}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {Math.round((campaign.opened / campaign.sent) * 100)}% open rate
-                      </p>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <Mail className="mx-auto h-12 w-12 text-gray-400" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No email campaigns yet</h3>
+                      <p className="mt-1 text-sm text-gray-500">Send your first email blast to see performance metrics here.</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>

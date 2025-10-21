@@ -3,6 +3,7 @@ import { DentalClinicScraper, ScrapingLocation, DentalClinicLead } from '@/lib/s
 import { GooglePlacesScraper } from '@/lib/scraping/google-places-scraper'
 import { OpenStreetMapScraper } from '@/lib/scraping/openstreetmap-scraper'
 import { FoursquareScraper } from '@/lib/scraping/foursquare-scraper'
+import { GoogleMapsUrlScraper } from '@/lib/scraping/google-maps-url-scraper'
 import { generateMockDentalClinics } from '@/lib/scraping/dental-clinic-mock-data'
 
 interface ScrapeRequest {
@@ -97,7 +98,16 @@ export async function POST(request: NextRequest) {
     try {
       // Multi-source data aggregation - try all available sources
       const allResults = await Promise.allSettled([
-        // 1. Google Places API (most reliable, requires API key)
+        // 1. Google Maps URLs (primary recommendation, always available)
+        (async () => {
+          console.log('🗺️ Generating Google Maps URLs for lead generation...')
+          const googleMapsUrlScraper = new GoogleMapsUrlScraper()
+          const results = await googleMapsUrlScraper.scrapeByLocation(location)
+          if (results.length > 0) sources.push('Google Maps URLs')
+          return results
+        })(),
+
+        // 2. Google Places API (most reliable, requires API key)
         (async () => {
           const googleApiKey = process.env.GOOGLE_PLACES_API_KEY
           if (googleApiKey && googleApiKey !== 'your_google_places_api_key') {
@@ -110,7 +120,7 @@ export async function POST(request: NextRequest) {
           return []
         })(),
 
-        // 2. OpenStreetMap Overpass API (completely free)
+        // 3. OpenStreetMap Overpass API (completely free)
         (async () => {
           console.log('🗺️ Fetching from OpenStreetMap...')
           const osmScraper = new OpenStreetMapScraper()
@@ -119,7 +129,7 @@ export async function POST(request: NextRequest) {
           return results
         })(),
 
-        // 3. Foursquare Places API (free tier available)
+        // 4. Foursquare Places API (free tier available)
         (async () => {
           const foursquareApiKey = process.env.FOURSQUARE_API_KEY
           if (foursquareApiKey && foursquareApiKey !== 'your_foursquare_api_key') {
@@ -132,7 +142,7 @@ export async function POST(request: NextRequest) {
           return []
         })(),
 
-        // 4. Traditional web scraping (backup method)
+        // 5. Traditional web scraping (backup method)
         (async () => {
           console.log('🔍 Attempting traditional web scraping...')
           const scraper = new DentalClinicScraper()

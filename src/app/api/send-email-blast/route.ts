@@ -145,8 +145,8 @@ export async function POST(request: NextRequest) {
     const results = []
     const errors = []
 
-    // Try Resend first if configured
-    if (process.env.RESEND_API_KEY) {
+    // Try Resend first if configured with a valid API key
+    if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_123456789_placeholder' && process.env.RESEND_API_KEY.startsWith('re_')) {
       console.log('Using Resend email service...')
       const resend = new Resend(process.env.RESEND_API_KEY)
 

@@ -168,132 +168,12 @@ function generateTags(company: string, needs: string): string[] {
   return tags
 }
 
-// Complete CSV data processing
-const csvData = [
-  { no: 1, name: 'Amber Reavis Bates', contact: '615-891-3192', email: 'info@smileonnashville.com', clinic: 'Smile On Nashville', needs: 'Needs Administrative Manager at a cosmetic practice in Nashville' },
-  { no: 2, name: 'Jennifer VanNess', contact: '845-209-2500', email: 'info@afdclean.com', clinic: 'Aesthetic Family Dentistry', needs: 'Inquiry about best tasks to outsource' },
-  { no: 3, name: 'Rita Masouh', contact: '508-226-1686', email: 'nortonfamilydental@gmail.com', clinic: 'Norton Family Dental', needs: 'Interested in using A1—might consider our VAs instead' },
-  { no: 4, name: 'Mary Elizabeth Bush Joyce', contact: '850-476-8418', email: '', clinic: 'West Florida Periodontal Associates', needs: 'Looking to expand the admin team' },
-  { no: 5, name: 'Andrea Rathjens', contact: '631-265-6655', email: '', clinic: 'Dental 365 (New York)', needs: 'Looking for Front Desk Coordinator' },
-  { no: 6, name: 'Reem Dughly', contact: '4438488037', email: 'reem.dughly@gmail.com', clinic: '', needs: '' },
-  { no: 7, name: 'Michelle Samuel', contact: '3013851572', email: 'michelle.koilpillai@gmail.com', clinic: 'Montpelier Family Dentistry', needs: '' },
-  { no: 8, name: 'Iris Lewis-Moody', contact: '2156855738', email: 'iris.lewis-moody@phila.gov', clinic: '', needs: '' },
-  { no: 9, name: 'Scott Fisher', contact: '3017258311', email: 'fishfam2000@yahoo.com', clinic: '', needs: '' },
-  { no: 10, name: 'Shelia Thomas-Gillespie', contact: '2403606842', email: 'sheliagillesp@aol.com', clinic: '', needs: '' },
-  { no: 11, name: 'Justina Urena-Paulino', contact: '12027255345', email: 'justinaup@me.com', clinic: '', needs: '' },
-  { no: 12, name: 'Soraya Jafari', contact: '3015938910', email: 'drsorayaj@gmail.com', clinic: 'Four Corners Family Dentistry', needs: '' },
-  { no: 13, name: 'Lydia Primich', contact: '5707662339', email: 'lprimichrdh@gmail.com', clinic: '', needs: '' },
-  { no: 14, name: 'George P. Harding', contact: '3015590404', email: 'gphardds1105@gmail.com', clinic: 'George P Harding DDS, PC', needs: '' },
-  { no: 15, name: 'Bridget McGuire', contact: '3019802657', email: 'jcbsladr@hotmail.com', clinic: '', needs: '' },
-  { no: 16, name: 'Alexandra Scott', contact: '4048088512', email: 'alexandrascott99@yahoo.com', clinic: '', needs: '' },
-  { no: 17, name: 'Kenneth Woo', contact: '3015264294', email: 'kenwoo@verizon.net', clinic: '', needs: '' },
-  { no: 18, name: 'Bruce Yuille', contact: '4105661550', email: 'docyule@aol.com', clinic: 'Dr Bruce E. Yuille MAGD', needs: '' },
-  { no: 19, name: 'Ashley Francis', contact: '4105338812', email: 'ashleynfran@gmail.com', clinic: '', needs: '' },
-  { no: 20, name: 'Florence Lin', contact: '3012191853', email: 'flolin23@hotmail.com', clinic: '', needs: '' },
-  { no: 21, name: 'Anh Huynh', contact: '7033430249', email: 'anh.huynh.d@gmail.com', clinic: '', needs: '' },
-  { no: 22, name: 'Kristine Kim', contact: '4106275627', email: 'kristinekim10@yahoo.com', clinic: 'Augustine Paik DDS', needs: '' },
-  { no: 23, name: 'Delia Chitimus', contact: '4436314765', email: 'delia.chitimus@gmail.com', clinic: 'Carroll County Dental Associates', needs: '' },
-  { no: 24, name: 'Andrea Flamer', contact: '2022717815', email: 'healthysmile344@hotmail.com', clinic: 'Andrea S Flamer DDS', needs: '' },
-  { no: 25, name: 'Nike Ogunbekun', contact: '5855307402', email: 'dr_o@novalinedental.com', clinic: 'Novaline Dental', needs: '' },
-  { no: 26, name: 'Kimberly Morris', contact: '2024250622', email: 'kimberly.morris@cc-dc.org', clinic: '', needs: '' },
-  { no: 27, name: 'David Lee', contact: '3016495001', email: 'ruths.leedentistry@gmail.com', clinic: 'Lee Dentistry', needs: '' },
-  { no: 28, name: 'Aala Salimian', contact: '4105550456', email: 'aalasalimian@gmail.com', clinic: '', needs: '' },
-  { no: 29, name: 'Michael Saffold', contact: '14109616839', email: 'safdent@verizon.net', clinic: 'Quest Dental', needs: '' },
-  { no: 30, name: 'Cynthia Alimario', contact: '3047230791', email: 'actalim@gmail.com', clinic: '', needs: '' },
-  { no: 31, name: 'Michael White', contact: '4104864353', email: 'cgrandprix@yahoo.com', clinic: 'Total Health Care', needs: '' },
-  { no: 32, name: 'Cynthia Simon', contact: '4108285699', email: 'casimonrdh@gmail.com', clinic: 'Kids First Pediatric Dentistry', needs: '' },
-  { no: 33, name: 'Basil Saiedy', contact: '4103379505', email: 'bsaiedy@aol.com', clinic: 'Green Spring Dental Care', needs: '' },
-  { no: 34, name: 'Habib Ghahreman', contact: '3019630665', email: 'email4habib@gmail.com', clinic: 'Dental Suite', needs: '' },
-  { no: 35, name: 'Kinneth Chong', contact: '4108848484', email: '', clinic: 'Kenneth Chong', needs: '' },
-  { no: 36, name: 'Monica Chang-Watanabe', contact: '7037214261', email: 'mganbatte@yahoo.com', clinic: 'Smile Concept', needs: '' },
-  { no: 37, name: 'J. Terrell Hoffeld', contact: '3017704489', email: 'jterrellhoffeld@gmail.com', clinic: 'U.S. Public Health Service (Retired)', needs: '' },
-  { no: 38, name: 'Martha Bustillo', contact: '3013452222', email: 'mbustillo25@yahoo.com', clinic: 'Greenbelt Smiles', needs: '' },
-  { no: 39, name: 'Toan Nguyen', contact: '3015286633', email: 'tdnguyen27@yahoo.com', clinic: 'Smile Design Dental', needs: '' },
-  { no: 40, name: 'Elaine Miginsky', contact: '4102523136', email: 'parroteeth@verizon.net', clinic: '', needs: '' },
-  { no: 41, name: 'Eric Levine', contact: '2024221006', email: 'elevine@olneydentalcenter.com', clinic: '', needs: '' },
-  { no: 42, name: 'David Hazlet', contact: '7248161749', email: 'drdah@consolidated.net', clinic: '', needs: '' },
-  { no: 43, name: 'Heather Nguyen', contact: '3019635555', email: 'heathernguyendds@gmail.com', clinic: 'Great Smiles Dental Care', needs: '' },
-  { no: 44, name: 'Robert Miller', contact: '4106105283', email: 'rgmillerhjf@hotmail.com', clinic: '', needs: '' },
-  { no: 45, name: 'David Scott', contact: '3014393331', email: 'dscottjr@erols.com', clinic: 'David L. Scott Jr., DDS', needs: '' },
-  { no: 46, name: 'Richard Diaz', contact: '3017889036', email: 'ctdentist@gmail.com', clinic: '', needs: '' },
-  { no: 47, name: 'Wendall Poulsen', contact: '3014219001', email: '', clinic: 'Wendall Poulsen, DDS', needs: '' },
-  { no: 48, name: 'Eunice Wu', contact: '2159223700', email: 'ewudmd@gmail.com', clinic: '', needs: '' },
-  { no: 49, name: 'John Balas', contact: '7193382770', email: 'jbalasdds@hotmail.com', clinic: '', needs: '' },
-  { no: 50, name: 'Mabel Stanley', contact: '2402743008', email: 'ssdmd1@aol.com', clinic: '', needs: '' },
-  { no: 51, name: 'Ryan Guard', contact: '4106726908', email: 'ryanandtiffany@gmail.com', clinic: '', needs: '' },
-  { no: 52, name: 'Xuewei Li', contact: '6466621417', email: 'frontoffice@serenityfamilydental.us', clinic: '', needs: '' },
-  { no: 53, name: 'Josephine Amigo', contact: '3017175267', email: 'jabamigo574@yahoo.com', clinic: '', needs: '' },
-  { no: 54, name: 'Lan Duckett', contact: '5712151975', email: 'duckettddspc@hotmail.com', clinic: '', needs: '' },
-  { no: 55, name: 'Leslie Davis-Groom', contact: '3013773998', email: 'ljgroom13@verizon.net', clinic: '', needs: '' },
-  { no: 56, name: 'Bo Kim', contact: '2406435602', email: 'boramkim38@gmail.com', clinic: '', needs: '' },
-  { no: 57, name: 'Fardous Medani', contact: '5035159482', email: 'fardousmekki@gmail.com', clinic: '', needs: '' },
-  { no: 58, name: 'Anna Wu', contact: '4434655046', email: 'anna.wu.c@gmail.com', clinic: '', needs: '' },
-  { no: 59, name: 'Laura Muhammad', contact: '2029054430', email: 'amnimar_dds1@yahoo.com', clinic: '', needs: '' },
-  { no: 60, name: 'Ivan Sumitra', contact: '2026070326', email: 'drivan@verizon.net', clinic: '', needs: '' },
-  { no: 61, name: 'Renie Gross', contact: '2404987578', email: 'reniemg@gmail.com', clinic: '', needs: '' },
-  { no: 62, name: 'Elba Ventura', contact: '2013062545', email: 'elbaventura107@gmail.com', clinic: '', needs: '' },
-  { no: 63, name: 'Dwight Garcia', contact: '2013201256', email: 'dgarciastarman14@gmail.com', clinic: 'All City Dental', needs: '' },
-  { no: 64, name: 'Rajashree Karandikar', contact: '9089035549', email: 'rajikarandikar@yahoo.com', clinic: '', needs: '' },
-  { no: 65, name: 'Inna Budiyanskaya', contact: '6462627984', email: 'ibudiyanskaya@hotmail.com', clinic: '', needs: '' },
-  { no: 66, name: 'Anne Zenerovitz', contact: '9087358110', email: 'azenerovitz@comcast.net', clinic: '', needs: '' },
-  { no: 67, name: 'Andrew Zenerovitz', contact: '9087358110', email: 'andrewzenerovitzdmd@gmail.com', clinic: '', needs: '' },
-  { no: 68, name: 'Ogonna Orjiekwe', contact: '7185645517', email: 'ogonnao@yahoo.com', clinic: 'Diamond Dental Group', needs: '' },
-  { no: 69, name: 'Nelly Vasquez', contact: '6463585646', email: 'nvasquezdds@msn.com', clinic: 'Urban Health Plan', needs: '' },
-  { no: 70, name: 'Evan Spivack', contact: '9739727040', email: 'spivacev@sdm.rutgers.edu', clinic: '', needs: '' },
-  { no: 71, name: 'Robert Praisner', contact: '9088795912', email: 'bobpraisner@yahoo.com', clinic: '', needs: '' },
-  { no: 72, name: 'Enrique Salinas', contact: '9733448800', email: 'newarkfamilydentist@gmail.com', clinic: '', needs: '' },
-  { no: 73, name: 'Jeffrey Wechsler', contact: '2015295999', email: 'drjzw@aol.com', clinic: '', needs: '' },
-  { no: 74, name: 'Adam Wechsler', contact: '2013177188', email: 'adamwec@gmail.com', clinic: 'Family Dental Care of Mahwah', needs: '' },
-  { no: 75, name: 'Julia Goldberg', contact: '9176746644', email: 'drjuliagold@aol.com', clinic: 'Be Well Dental', needs: '' },
-  { no: 76, name: 'Yekaterina Levin', contact: '7188371797', email: 'levidental@verizon.net', clinic: '', needs: '' },
-  { no: 77, name: 'Anneli Boller', contact: '7247491517', email: 'anneliboller@oakvalleymedical.com', clinic: 'Oak Valley Medical and Dental', needs: '' },
-  { no: 78, name: 'Harmon Kaplan', contact: '2018668421', email: 'harmonkaplan@yahoo.com', clinic: 'Harmon B. Kaplan, D.M.D.', needs: '' },
-  { no: 79, name: 'Julia Smirnova', contact: '2019415522', email: 'aplusdental@hotmail.com', clinic: 'A Plus Dental', needs: '' },
-  { no: 80, name: 'Suzanne Campbell', contact: '7245508301', email: 'suzannecampbell@oakvalleymedical.com', clinic: 'Esopus Dental', needs: '' },
-  { no: 81, name: 'Karen Quigley', contact: '6179685659', email: 'quigleyk@bu.edu', clinic: '', needs: '' },
-  { no: 82, name: 'Francis Mante', contact: '16102039429', email: 'mantefk@upenn.edu', clinic: '', needs: '' },
-  { no: 83, name: 'Steven Roberts', contact: '7742758799', email: 'srobert@bu.edu', clinic: 'Boston University', needs: '' },
-  { no: 84, name: 'Howard Deutsch', contact: '9735630659', email: 'drhdeutsch172@gmail.com', clinic: 'Howard I. Deutsch, D.D.S.', needs: '' },
-  { no: 85, name: 'Mark Robinson', contact: '9737141650', email: 'mdrdmd@aol.com', clinic: '', needs: '' },
-  { no: 86, name: 'Amy Rojas', contact: '2013578700', email: 'amydmd07@yahoo.com', clinic: 'Allure Dental', needs: '' },
-  { no: 87, name: 'Steven Canger', contact: '2017963675', email: 'sfcangerdds@optonline.net', clinic: '', needs: '' },
-  { no: 88, name: 'Paul Hanna', contact: '8604423323', email: 'drpaulhanna@yahoo.com', clinic: '', needs: '' },
-  { no: 89, name: 'Michael Colarusso', contact: '2014409190', email: 'michaelcolarussodds@gmail.com', clinic: '', needs: '' },
-  { no: 90, name: 'Waguih Sidhom', contact: '7189846181', email: 'wsidhomdds@hotmail.com', clinic: '', needs: '' },
-  { no: 91, name: 'Bob Montgomery', contact: '7329152740', email: 'drbobdds@optonline.net', clinic: 'The Relaxing Smile', needs: '' },
-  { no: 92, name: 'Jay Jeong', contact: '2013216858', email: 'happydol82@gmail.com', clinic: '', needs: '' },
-  { no: 93, name: 'Zoey DiMarco', contact: '9738862730', email: 'psdtundr@optonline.net', clinic: '', needs: '' },
-  { no: 94, name: 'Douglas Doran', contact: '8603389178', email: 'drdoran@rivereastdentalgroup.com', clinic: '', needs: '' },
-  { no: 95, name: 'Henry Karlin', contact: '3477032210', email: 'hekarlindds@gmail.com', clinic: '', needs: '' },
-  { no: 96, name: 'Scott Peters', contact: '2015299000', email: 'drscottp@yahoo.com', clinic: '', needs: '' },
-  { no: 97, name: 'Yoon Lyou', contact: '2153224888', email: 'joy-for-dentistry@comcast.net', clinic: 'Joy For Dentistry, LLC', needs: '' },
-  { no: 98, name: 'David Stevens', contact: '9733660694', email: 'design_a_smile@yahoo.com', clinic: '', needs: '' },
-  { no: 99, name: 'Gordon Dufour', contact: '9739517321', email: 'dufour7@optonline.net', clinic: '', needs: '' },
-  { no: 100, name: 'Ilhyun Jung', contact: '7184264343', email: 'drdentist9@gmail.com', clinic: 'Ilhyun Jung DDS', needs: '' },
-  // Test accounts for email blast testing
-  { no: 101, name: 'Kreativ Loops', contact: '555-0001', email: 'kreativloops@gmail.com', clinic: 'KreativLoops Digital', needs: 'Test account for email blast functionality' },
-  { no: 102, name: 'Cherwin Fernandez', contact: '555-0002', email: 'fernandez.cherwin@gmail.com', clinic: 'Fernandez Consulting', needs: 'Test account for email blast functionality' },
-  { no: 103, name: 'IO KreativLoops', contact: '555-0003', email: 'io.kreativloops@gmail.com', clinic: 'IO KreativLoops Tech', needs: 'Test account for email blast functionality' }
-]
+// Production-ready: Start with empty contacts list
+// Users will add their own contacts or import via CSV
+const csvData = []
 
 // Process all CSV data into contact records
-const realContacts: EmailContact[] = csvData.map((row, index) => {
-  const { firstName, lastName } = parseName(row.name)
-  const hasEmail = row.email && row.email.length > 0
-  const status: 'active' | 'inactive' | 'bounced' = hasEmail ? 'active' : 'inactive'
-
-  return {
-    id: (index + 1).toString(),
-    firstName,
-    lastName,
-    email: row.email || '',
-    company: row.clinic || '',
-    phone: formatPhone(row.contact),
-    tags: generateTags(row.clinic, row.needs),
-    status,
-    createdAt: '2024-09-06'
-  }
-})
+const realContacts: EmailContact[] = []
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -1685,22 +1565,22 @@ export default function DashboardLayout() {
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="flex items-center text-yellow-600">
-                      <AlertTriangle size={16} className="mr-1" />
-                      <span className="text-sm font-medium">Demo Mode Active</span>
+                    <div className="flex items-center text-green-600">
+                      <CheckCircle size={16} className="mr-1" />
+                      <span className="text-sm font-medium">Production Ready</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
                   <div className="flex items-start">
-                    <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 mr-3 flex-shrink-0" />
                     <div>
-                      <h4 className="text-sm font-medium text-yellow-800 mb-2">
-                        🔄 Currently Using Demo Data
+                      <h4 className="text-sm font-medium text-green-800 mb-2">
+                        ✅ Real Data Sources Active
                       </h4>
-                      <p className="text-sm text-yellow-700 mb-3">
-                        The lead generation feature is currently showing sample data. To get real dental clinic leads, configure the Google Places API.
+                      <p className="text-sm text-green-700 mb-3">
+                        Lead generation is using real dental clinic data from OpenStreetMap. For premium data, you can also configure Google Places API.
                       </p>
                     </div>
                   </div>

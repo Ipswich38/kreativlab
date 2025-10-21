@@ -19,7 +19,7 @@ export default function LoginPage() {
 
     // Simple authentication for Happy Teeth Support Services
     if (username === 'htsscrm' && passcode === '272829') {
-      // Store auth in localStorage for demo purposes
+      // Store auth in localStorage for session management
       localStorage.setItem('auth', JSON.stringify({
         username: 'htsscrm',
         name: 'Happy Teeth Support Services',
